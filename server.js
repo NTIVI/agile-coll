@@ -97,8 +97,9 @@ wss.on('connection', (ws) => {
 function handleJoin(ws, data) {
     const { roomId, initData, user } = data;
     
-    // ВАЖНО: Установите bypassValidation = true ТОЛЬКО для тестов в браузере вне Telegram
-    const bypassValidation = false; 
+    // Если зашли из обычного браузера (нет initData), то пропускаем валидацию.
+    // Если зашли из Telegram (initData есть), то проводим проверку подписи.
+    const bypassValidation = !initData; 
     
     if (!bypassValidation && !validateInitData(initData)) {
         ws.send(JSON.stringify({ type: 'error', message: 'Ошибка авторизации Telegram. Неверный токен или подпись.' }));

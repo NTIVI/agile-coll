@@ -8,7 +8,7 @@ let peerConnections = {}; // id -> { pc, user }
 let ws;
 let currentRoomId = null;
 let isHost = false;
-let myUser = tg.initDataUnsafe?.user || { id: Math.floor(Math.random() * 10000), first_name: 'Пользователь ТГ' };
+let myUser = { id: Math.floor(Math.random() * 100000), first_name: 'Гость' };
 
 const ui = {
     lobby: document.getElementById('lobby-screen'),
@@ -20,8 +20,35 @@ const ui = {
     tgFirstName: document.getElementById('tg-first-name'),
     roomInput: document.getElementById('room-input'),
     currentRoomText: document.getElementById('current-room-id'),
-    btnAdmin: document.getElementById('btn-admin-panel')
+    btnAdmin: document.getElementById('btn-admin-panel'),
+    usernameContainer: document.getElementById('username-container'),
+    usernameInput: document.getElementById('username-input')
 };
+
+// Проверяем, запущены ли мы внутри Telegram Web App
+if (tg.initData && tg.initDataUnsafe?.user) {
+    // Внутри Telegram: используем реальный профиль и скрываем поле ввода
+    myUser = tg.initDataUnsafe.user;
+    ui.usernameContainer.classList.add('hidden');
+} else {
+    // Вне Telegram (в обычном браузере): показываем ввод имени
+    const savedName = localStorage.getItem('agile_username');
+    if (savedName) {
+        myUser.first_name = savedName;
+        ui.usernameInput.value = savedName;
+    } else {
+        myUser.first_name = 'Гость_' + Math.floor(Math.random() * 1000);
+        ui.usernameInput.value = myUser.first_name;
+    }
+    
+    // Динамически меняем имя при вводе и сохраняем
+    ui.usernameInput.addEventListener('input', () => {
+        const val = ui.usernameInput.value.trim();
+        myUser.first_name = val || 'Аноним';
+        ui.tgFirstName.textContent = myUser.first_name;
+        localStorage.setItem('agile_username', myUser.first_name);
+    });
+}
 
 // Приветствие пользователя
 ui.tgFirstName.textContent = myUser.first_name;

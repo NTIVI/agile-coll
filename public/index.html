@@ -85,6 +85,11 @@
             Создать новую конференцию
         </button>
         
+        <!-- Поле ввода имени для браузеров (скрывается в Telegram) -->
+        <div id="username-container" class="w-full mb-4">
+            <input type="text" id="username-input" placeholder="Ваше имя для входа" class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-4 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition font-medium shadow-sm">
+        </div>
+        
         <div class="w-full flex gap-3">
             <input type="text" id="room-input" placeholder="Введите ID комнаты" class="flex-1 bg-white border border-slate-200 rounded-2xl px-4 py-4 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 uppercase tracking-wider text-sm transition font-medium shadow-sm">
             <button id="btn-join" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold py-4 px-8 rounded-2xl transition shadow-sm focus:outline-none">
