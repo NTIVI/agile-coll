@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram Web RTC</title>
+    <!-- Подключение Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Адаптивная сетка видео */
+        .video-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+            align-content: start;
+        }
+        @media (min-width: 640px) {
+            .video-grid-layout { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3/4;
+            background: #1f2937;
+            border-radius: 1rem;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (min-width: 640px) {
+            .video-container { aspect-ratio: 16/9; }
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* Зеркальное отображение для своей камеры */
+        .mirrored { transform: scaleX(-1); }
+    </style>
+</head>
+<body class="bg-gray-900 text-white select-none overflow-hidden">
+
+    <!-- Экран 1: Лобби -->
+    <div id="lobby-screen" class="flex flex-col items-center justify-center min-h-screen p-4">
+        <h1 class="text-3xl font-bold mb-6 text-blue-400">Привет, <span id="tg-first-name">Гость</span>!</h1>
+        
+        <!-- Предпросмотр камеры -->
+        <div class="relative w-full max-w-sm aspect-[3/4] sm:aspect-video bg-gray-800 rounded-2xl overflow-hidden mb-6 border border-gray-700 shadow-xl shadow-blue-900/20">
+            <video id="local-preview" class="mirrored" autoplay muted playsinline></video>
+            <div class="absolute bottom-4 w-full flex justify-center gap-4 px-4">
+                <button id="btn-preview-mic" class="bg-gray-700/80 backdrop-blur p-3 rounded-full hover:bg-gray-600 transition shadow w-12 h-12 flex items-center justify-center">🎤</button>
+                <button id="btn-preview-cam" class="bg-gray-700/80 backdrop-blur p-3 rounded-full hover:bg-gray-600 transition shadow w-12 h-12 flex items-center justify-center">📷</button>
+            </div>
+        </div>
+        
+        <button id="btn-create" class="w-full max-w-sm bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl mb-4 transition shadow-lg shadow-blue-600/30">
+            Создать конференцию
+        </button>
+        
+        <div class="w-full max-w-sm flex gap-2">
+            <input type="text" id="room-input" placeholder="ID комнаты" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 uppercase transition">
+            <button id="btn-join" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg shadow-green-600/30">
+                Войти
+            </button>
+        </div>
+    </div>
+
+    <!-- Экран 2: Звонок -->
+    <div id="call-screen" class="hidden flex-col h-screen h-[100dvh] bg-gray-950">
+        <!-- Шапка -->
+        <div class="flex justify-between items-center p-4 bg-gray-900/80 backdrop-blur border-b border-gray-800 z-10">
+            <div class="font-medium text-sm text-gray-300">Комната: <span id="current-room-id" class="text-white font-mono tracking-wider"></span></div>
+            <button id="btn-admin-panel" class="hidden text-blue-400 bg-blue-400/10 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-blue-400/20 transition">Участники</button>
+        </div>
+        
+        <!-- Сетка видео -->
+        <div id="video-grid" class="flex-1 video-grid-layout p-2 overflow-y-auto">
+            <!-- Сюда скриптом добавляются <video> -->
+        </div>
+        
+        <!-- Панель управления (Floating Bar) -->
+        <div class="p-4 bg-gray-900/90 backdrop-blur pb-6 sm:pb-4 flex justify-center gap-4 sm:gap-6 border-t border-gray-800 z-10">
+            <button id="btn-call-mic" class="bg-gray-700 p-4 rounded-full hover:bg-gray-600 transition flex items-center justify-center w-14 h-14 text-xl shadow">🎤</button>
+            <button id="btn-call-cam" class="bg-gray-700 p-4 rounded-full hover:bg-gray-600 transition flex items-center justify-center w-14 h-14 text-xl shadow">📷</button>
+            <button id="btn-call-share" class="bg-gray-700 p-4 rounded-full hover:bg-gray-600 transition flex items-center justify-center w-14 h-14 text-xl hidden sm:flex shadow" title="Демонстрация экрана">🖥️</button>
+            <button id="btn-leave" class="bg-red-600 p-4 rounded-full hover:bg-red-500 transition shadow-[0_0_15px_rgba(220,38,38,0.5)] flex items-center justify-center w-14 h-14 text-xl">✖</button>
+        </div>
+    </div>
+
+    <!-- Экран 3: Панель администратора -->
+    <div id="admin-panel" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center">
+        <div class="bg-gray-900 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-4 max-h-[80vh] flex flex-col border border-gray-800 shadow-2xl">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-800">
+                <h2 class="text-lg font-bold text-white">Управление участниками</h2>
+                <button id="btn-close-admin" class="text-gray-400 hover:text-white p-2">✕</button>
+            </div>
+            <div id="participants-list" class="flex-1 overflow-y-auto space-y-2 pr-1 pb-4">
+                <!-- Динамический список -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
