@@ -11,6 +11,35 @@ const wss = new WebSocket.Server({ server });
 // Токен твоего бота для валидации Telegram Web App
 const BOT_TOKEN = '8618902193:AAEeLS1Px-ckZFG66y5Jz5eUVPV54ySGN5I';
 
+// Инициализация Telegram-бота
+const TelegramBot = require('node-telegram-bot-api');
+const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+
+// Ловим ошибки поллинга, чтобы сервер не крашился при дисконнектах
+bot.on('polling_error', (error) => console.log('Telegram Bot Polling Error:', error.message));
+
+// Обработка команды /start
+bot.onText(/\/start/, (msg) => {
+    const chatId = msg.chat.id;
+    const name = msg.from.first_name || 'друг';
+    
+    bot.sendMessage(chatId, `Привет, ${name}! 👋\n\nДобро пожаловать в **Agile Coll** — профессиональные видеоконференции прямо внутри Telegram.\n\nСоздавайте комнаты, транслируйте экран и общайтесь с идеальным качеством звука и видео! 💻✨`, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    {
+                        text: 'Открыть Agile Coll 💻',
+                        web_app: { url: 'https://agile-coll.vercel.app' }
+                    }
+                ]
+            ]
+        }
+    }).catch(err => {
+        console.error('Ошибка отправки сообщения ботом:', err);
+    });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Функция валидации данных от Telegram Web App (защита комнат)
