@@ -23,7 +23,7 @@ bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     const name = msg.from.first_name || 'друг';
     
-    bot.sendMessage(chatId, `Привет, ${name}! 👋\n\nДобро пожаловать в **Agile Coll** — профессиональные видеоконференции прямо внутри Telegram.\n\nСоздавайте комнаты, транслируйте экран и общайтесь с идеальным качеством звука и видео! 💻✨`, {
+    bot.sendMessage(chatId, `Привет, ${name}! 👋\n\nДобро пожаловать в **Agile Coll** — профессиональные видеоконференции прямо внутри Telegram.\n\nСоздавайте комнаты, транслируйте экран и общайтесь с идеальным качеством звука и видео! 💻✨\n\n---\n*Данный проект был создан [Agile Business](https://agile-business-pro.com/)*`, {
         parse_mode: 'Markdown',
         reply_markup: {
             inline_keyboard: [
