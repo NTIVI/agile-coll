@@ -65,13 +65,36 @@ function toggleVideo() {
 }
 
 function updateMediaButtons() {
-    const audioText = isAudioEnabled ? '🎤' : '🔇';
-    const videoText = isVideoEnabled ? '📷' : '🚫';
+    const audioBtnCall = document.getElementById('btn-call-mic');
+    const audioBtnPrev = document.getElementById('btn-preview-mic');
+    const videoBtnCall = document.getElementById('btn-call-cam');
+    const videoBtnPrev = document.getElementById('btn-preview-cam');
     
-    document.getElementById('btn-preview-mic').textContent = audioText;
-    document.getElementById('btn-call-mic').textContent = audioText;
-    document.getElementById('btn-preview-cam').textContent = videoText;
-    document.getElementById('btn-call-cam').textContent = videoText;
+    // Микрофон
+    if (isAudioEnabled) {
+        audioBtnPrev.textContent = '🎤';
+        audioBtnPrev.className = 'bg-white/95 backdrop-blur-md text-slate-800 p-3 rounded-full hover:bg-slate-50 transition border border-slate-200/60 shadow-lg w-12 h-12 flex items-center justify-center text-lg';
+        audioBtnCall.textContent = '🎤';
+        audioBtnCall.className = 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100/80 p-4 rounded-full transition flex items-center justify-center w-14 h-14 text-xl shadow-sm focus:outline-none';
+    } else {
+        audioBtnPrev.textContent = '🔇';
+        audioBtnPrev.className = 'bg-rose-50 text-rose-600 p-3 rounded-full hover:bg-rose-100 transition border border-rose-200/60 shadow-lg w-12 h-12 flex items-center justify-center text-lg';
+        audioBtnCall.textContent = '🔇';
+        audioBtnCall.className = 'bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100/80 p-4 rounded-full transition flex items-center justify-center w-14 h-14 text-xl shadow-sm focus:outline-none';
+    }
+
+    // Камера
+    if (isVideoEnabled) {
+        videoBtnPrev.textContent = '📷';
+        videoBtnPrev.className = 'bg-white/95 backdrop-blur-md text-slate-800 p-3 rounded-full hover:bg-slate-50 transition border border-slate-200/60 shadow-lg w-12 h-12 flex items-center justify-center text-lg';
+        videoBtnCall.textContent = '📷';
+        videoBtnCall.className = 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100/80 p-4 rounded-full transition flex items-center justify-center w-14 h-14 text-xl shadow-sm focus:outline-none';
+    } else {
+        videoBtnPrev.textContent = '🚫';
+        videoBtnPrev.className = 'bg-rose-50 text-rose-600 p-3 rounded-full hover:bg-rose-100 transition border border-rose-200/60 shadow-lg w-12 h-12 flex items-center justify-center text-lg';
+        videoBtnCall.textContent = '🚫';
+        videoBtnCall.className = 'bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100/80 p-4 rounded-full transition flex items-center justify-center w-14 h-14 text-xl shadow-sm focus:outline-none';
+    }
 }
 
 document.getElementById('btn-preview-mic').onclick = toggleAudio;
@@ -117,7 +140,7 @@ function addLocalVideoToGrid() {
     video.className = 'mirrored';
     
     const nameLabel = document.createElement('div');
-    nameLabel.className = 'absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded text-xs text-white z-10';
+    nameLabel.className = 'absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-800 shadow-sm border border-slate-200/50 z-10';
     nameLabel.textContent = myUser.first_name + ' (Вы)';
 
     container.appendChild(video);
@@ -256,7 +279,7 @@ function addRemoteVideo(peerId, stream, user) {
     video.playsInline = true;
     
     const nameLabel = document.createElement('div');
-    nameLabel.className = 'absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded text-xs text-white z-10';
+    nameLabel.className = 'absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-800 shadow-sm border border-slate-200/50 z-10';
     nameLabel.textContent = user?.first_name || 'Участник';
 
     container.appendChild(video);
@@ -295,7 +318,8 @@ document.getElementById('btn-call-share').onclick = async () => {
             localVideo.classList.remove('mirrored');
         }
         
-        document.getElementById('btn-call-share').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('btn-call-share').classList.remove('bg-slate-50', 'text-slate-700', 'border-slate-200');
+        document.getElementById('btn-call-share').classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
         
         // Если пользователь остановил шаринг через системное меню браузера
         screenTrack.onended = () => stopScreenShare();
@@ -324,7 +348,8 @@ function stopScreenShare() {
         localVideo.srcObject = localStream;
         localVideo.classList.add('mirrored');
     }
-    document.getElementById('btn-call-share').classList.remove('bg-blue-600', 'text-white');
+    document.getElementById('btn-call-share').classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
+    document.getElementById('btn-call-share').classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
 }
 
 // 6. Панель Модерации и Права
@@ -336,28 +361,28 @@ function updateAdminPanel() {
     
     const count = Object.keys(peerConnections).length;
     if (count === 0) {
-        ui.participantsList.innerHTML = '<div class="text-gray-400 text-center py-4 text-sm">В комнате больше никого нет</div>';
+        ui.participantsList.innerHTML = '<div class="text-slate-400 text-center py-6 text-sm font-medium">В комнате больше никого нет</div>';
         return;
     }
 
     for (let peerId in peerConnections) {
         const user = peerConnections[peerId].user;
         const item = document.createElement('div');
-        item.className = 'flex justify-between items-center bg-gray-800 p-3 rounded-xl';
+        item.className = 'flex justify-between items-center bg-slate-50 border border-slate-100 p-3.5 rounded-2xl';
         
         let buttons = '';
         if (isHost) {
             buttons = `
                 <div class="flex gap-2">
-                    <button onclick="sendAdminCmd('mute_audio', '${peerId}')" class="bg-gray-700 hover:bg-yellow-600 p-2 rounded-lg transition" title="Выключить микрофон">🔇</button>
-                    <button onclick="sendAdminCmd('mute_video', '${peerId}')" class="bg-gray-700 hover:bg-yellow-600 p-2 rounded-lg transition" title="Выключить камеру">🚫</button>
-                    <button onclick="sendAdminCmd('kick', '${peerId}')" class="bg-gray-700 hover:bg-red-600 p-2 rounded-lg transition" title="Исключить">❌</button>
+                    <button onclick="sendAdminCmd('mute_audio', '${peerId}')" class="bg-white border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 p-2.5 rounded-xl transition shadow-sm text-slate-600" title="Выключить микрофон">🔇</button>
+                    <button onclick="sendAdminCmd('mute_video', '${peerId}')" class="bg-white border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 p-2.5 rounded-xl transition shadow-sm text-slate-600" title="Выключить камеру">🚫</button>
+                    <button onclick="sendAdminCmd('kick', '${peerId}')" class="bg-white border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 p-2.5 rounded-xl transition shadow-sm text-slate-600" title="Исключить">❌</button>
                 </div>
             `;
         }
         
         item.innerHTML = `
-            <span class="font-medium text-white truncate max-w-[120px] sm:max-w-[180px]">${user.first_name}</span>
+            <span class="font-semibold text-slate-800 truncate max-w-[120px] sm:max-w-[180px]">${user.first_name}</span>
             ${buttons}
         `;
         ui.participantsList.appendChild(item);
