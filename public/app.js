@@ -127,8 +127,8 @@ function addLocalVideoToGrid() {
 
 // 3. Сигналинг (Подключение к серверу)
 function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(`${protocol}//${window.location.host}`);
+    // Подключаемся к бэкенду на Render
+    ws = new WebSocket(`wss://agile-coll.onrender.com`);
     
     ws.onopen = () => {
         ws.send(JSON.stringify({
