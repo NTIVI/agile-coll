@@ -23,14 +23,14 @@ bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     const name = msg.from.first_name || 'друг';
     
-    bot.sendMessage(chatId, `Привет, ${name}! 👋\n\nДобро пожаловать в **Agile Coll** — профессиональные видеоконференции прямо внутри Telegram.\n\nСоздавайте комнаты, транслируйте экран и общайтесь с идеальным качеством звука и видео! 💻✨\n\n---\n*Данный проект был создан [Agile Business](https://agile-business-pro.com/)*`, {
+    bot.sendMessage(chatId, `Привет, ${name}!\n\nДобро пожаловать в Agile Call — профессиональные видеоконференции прямо внутри Telegram.\n\nСоздавайте комнаты, транслируйте экран и общайтесь с качественным звуком и видео!\n\n---\n*Данный проект был создан [Agile Business](https://agile-business-pro.com/)*`, {
         parse_mode: 'Markdown',
         reply_markup: {
             inline_keyboard: [
                 [
                     {
-                        text: 'Открыть Agile Coll 💻',
-                        web_app: { url: 'https://agile-coll.vercel.app' }
+                        text: 'Открыть Agile Call',
+                        web_app: { url: 'https://agile-call.vercel.app' }
                     }
                 ]
             ]
@@ -87,6 +87,10 @@ wss.on('connection', (ws) => {
             case 'mute_video':
             case 'kick':
                 handleAdminAction(ws, data);
+                break;
+            case 'media-state':
+            case 'speech-text':
+                handleBroadcast(ws, data);
                 break;
         }
     });
@@ -191,6 +195,19 @@ function handleLeave(ws) {
             delete rooms[ws.roomId];
         }
     }
+}
+
+function handleBroadcast(ws, data) {
+    const room = rooms[ws.roomId];
+    if (!room) return;
+    
+    room.clients.forEach((client, clientId) => {
+        if (clientId !== ws.id) {
+            data.sender = ws.id;
+            data.senderName = ws.user.first_name;
+            client.send(JSON.stringify(data));
+        }
+    });
 }
 
 const PORT = process.env.PORT || 3000;

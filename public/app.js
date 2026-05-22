@@ -1,59 +1,7 @@
 const tg = window.Telegram.WebApp;
-tg.expand(); // Расширяем аппку на весь экран телефона
+tg.expand();
 
-// Основные переменные
-let localStream;
-let displayStream;
-let peerConnections = {}; // id -> { pc, user }
-let ws;
-let currentRoomId = null;
-let isHost = false;
-let myUser = { id: Math.floor(Math.random() * 100000), first_name: 'Гость' };
-
-const ui = {
-    lobby: document.getElementById('lobby-screen'),
-    call: document.getElementById('call-screen'),
-    adminPanel: document.getElementById('admin-panel'),
-    videoGrid: document.getElementById('video-grid'),
-    participantsList: document.getElementById('participants-list'),
-    localPreview: document.getElementById('local-preview'),
-    tgFirstName: document.getElementById('tg-first-name'),
-    roomInput: document.getElementById('room-input'),
-    currentRoomText: document.getElementById('current-room-id'),
-    btnAdmin: document.getElementById('btn-admin-panel'),
-    usernameContainer: document.getElementById('username-container'),
-    usernameInput: document.getElementById('username-input')
-};
-
-// Проверяем, запущены ли мы внутри Telegram Web App
-if (tg.initData && tg.initDataUnsafe?.user) {
-    // Внутри Telegram: используем реальный профиль и скрываем поле ввода
-    myUser = tg.initDataUnsafe.user;
-    ui.usernameContainer.classList.add('hidden');
-} else {
-    // Вне Telegram (в обычном браузере): показываем ввод имени
-    const savedName = localStorage.getItem('agile_username');
-    if (savedName) {
-        myUser.first_name = savedName;
-        ui.usernameInput.value = savedName;
-    } else {
-        myUser.first_name = 'Гость_' + Math.floor(Math.random() * 1000);
-        ui.usernameInput.value = myUser.first_name;
-    }
-    
-    // Динамически меняем имя при вводе и сохраняем
-    ui.usernameInput.addEventListener('input', () => {
-        const val = ui.usernameInput.value.trim();
-        myUser.first_name = val || 'Аноним';
-        ui.tgFirstName.textContent = myUser.first_name;
-        localStorage.setItem('agile_username', myUser.first_name);
-    });
-}
-
-// Приветствие пользователя
-ui.tgFirstName.textContent = myUser.first_name;
-
-// STUN сервера Google для обхода NAT
+// WebRTC STUN Servers
 const ICE_SERVERS = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -61,27 +9,158 @@ const ICE_SERVERS = {
     ]
 };
 
-// 1. Инициализация локальных медиа (камера, микрофон)
-async function initLocalMedia() {
-    try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        ui.localPreview.srcObject = localStream;
-        updateMediaButtons();
-    } catch (e) {
-        console.error('Ошибка доступа к медиа:', e);
-        tg.showAlert('Разрешите доступ к камере и микрофону');
+const SVGS = {
+    micOn: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>`,
+    micOff: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="1" x2="23" y1="1" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"></path><path d="M17 11a7 7 0 0 1-14 0v-1M19 10v1a7.14 7.14 0 0 1-.5 2.5"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>`,
+    camOn: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>`,
+    camOff: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="1" x2="23" y1="1" y2="23"></line><path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34M10.59 10.59a4 4 0 1 0 5.66 5.66"></path></svg>`
+};
+
+// Global variables
+let localStream;
+let displayStream;
+let peerConnections = {}; // id -> { pc, user, audio: true, video: true }
+let ws;
+let currentRoomId = null;
+let isHost = false;
+let myUser = { id: Math.floor(Math.random() * 100000), first_name: 'Пользователь' };
+
+let isAudioEnabled = true;
+let isVideoEnabled = true;
+let recognition; // Web Speech API
+
+const ui = {
+    entryAnimation: document.getElementById('entry-animation'),
+    usernameContainer: document.getElementById('username-container'),
+    usernameInput: document.getElementById('username-input'),
+    localPreview: document.getElementById('local-preview'),
+    roomInput: document.getElementById('room-input'),
+    btnCreate: document.getElementById('btn-create'),
+    btnJoin: document.getElementById('btn-join'),
+    
+    // Call UI
+    callScreen: document.getElementById('call-screen'),
+    currentRoomIdText: document.getElementById('current-room-id'),
+    btnCopyLink: document.getElementById('btn-copy-link'),
+    btnAdminPanel: document.getElementById('btn-admin-panel'),
+    btnToggleChat: document.getElementById('btn-toggle-chat'),
+    videoGrid: document.getElementById('video-grid'),
+    
+    // Chat Drawer UI
+    chatDrawer: document.getElementById('chat-drawer'),
+    chatMessages: document.getElementById('chat-messages'),
+    chatInput: document.getElementById('chat-input'),
+    btnSendChat: document.getElementById('btn-send-chat'),
+    speechDot: document.getElementById('speech-dot'),
+    speechStatusText: document.getElementById('speech-status-text'),
+    
+    // Bottom Controls UI
+    btnCallMic: document.getElementById('btn-call-mic'),
+    btnCallCam: document.getElementById('btn-call-cam'),
+    btnCallShare: document.getElementById('btn-call-share'),
+    btnLeave: document.getElementById('btn-leave'),
+    
+    // Admin Modal UI
+    adminPanel: document.getElementById('admin-panel'),
+    btnCloseAdmin: document.getElementById('btn-close-admin'),
+    participantsList: document.getElementById('participants-list')
+};
+
+// 10. Entrance Animation (2 seconds minimum)
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (ui.entryAnimation) {
+            ui.entryAnimation.classList.add('fade-out');
+        }
+    }, 2000);
+    
+    // Parse URL room parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room') || urlParams.get('join');
+    if (roomParam) {
+        if (ui.roomInput) {
+            ui.roomInput.value = roomParam.toUpperCase();
+        }
+        // Delay joining slightly to let user see intro animation and finish camera init
+        setTimeout(() => {
+            startCall(roomParam.toUpperCase());
+        }, 2200);
+    }
+});
+
+// Configure Telegram profile vs manual browser name input
+if (tg.initData && tg.initDataUnsafe?.user) {
+    myUser = tg.initDataUnsafe.user;
+    if (ui.usernameContainer) {
+        ui.usernameContainer.style.display = 'none';
+    }
+} else {
+    const savedName = localStorage.getItem('agile_call_username');
+    if (savedName) {
+        myUser.first_name = savedName;
+        if (ui.usernameInput) ui.usernameInput.value = savedName;
+    } else {
+        myUser.first_name = 'Пользователь ' + Math.floor(Math.random() * 1000);
+        if (ui.usernameInput) ui.usernameInput.value = myUser.first_name;
+    }
+    
+    if (ui.usernameInput) {
+        ui.usernameInput.addEventListener('input', () => {
+            const val = ui.usernameInput.value.trim();
+            myUser.first_name = val || 'Пользователь';
+            localStorage.setItem('agile_call_username', myUser.first_name);
+        });
     }
 }
 
-// Управление включением/выключением аудио и видео
-let isAudioEnabled = true;
-let isVideoEnabled = true;
+// Helper to compute initials
+function getInitials(name) {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+}
 
+// 1. Local Media Initialization
+async function initLocalMedia() {
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (ui.localPreview) {
+            ui.localPreview.srcObject = localStream;
+        }
+        updateMediaButtons();
+        initSpeechToText();
+    } catch (e) {
+        console.error('Ошибка доступа к медиа:', e);
+        tg.showAlert('Разрешите доступ к камере и микрофону в настройках вашего устройства');
+    }
+}
+
+// Toggle media streams
 function toggleAudio() {
     if (!localStream) return;
     isAudioEnabled = !isAudioEnabled;
     localStream.getAudioTracks()[0].enabled = isAudioEnabled;
     updateMediaButtons();
+    
+    // Update local tile UI instantly
+    const localMic = document.getElementById('local-mic-muted');
+    if (localMic) {
+        localMic.style.display = isAudioEnabled ? 'none' : 'flex';
+    }
+
+    // Toggle speech recognition
+    if (recognition) {
+        if (isAudioEnabled) {
+            try { recognition.start(); } catch (err) {}
+        } else {
+            recognition.stop();
+        }
+    }
+
+    broadcastMediaState();
 }
 
 function toggleVideo() {
@@ -89,104 +168,322 @@ function toggleVideo() {
     isVideoEnabled = !isVideoEnabled;
     localStream.getVideoTracks()[0].enabled = isVideoEnabled;
     updateMediaButtons();
+
+    // Update local tile UI instantly
+    const localCam = document.getElementById('local-cam-placeholder');
+    if (localCam) {
+        localCam.style.display = isVideoEnabled ? 'none' : 'flex';
+    }
+
+    broadcastMediaState();
 }
 
 function updateMediaButtons() {
-    const audioBtnCall = document.getElementById('btn-call-mic');
-    const audioBtnPrev = document.getElementById('btn-preview-mic');
-    const videoBtnCall = document.getElementById('btn-call-cam');
-    const videoBtnPrev = document.getElementById('btn-preview-cam');
-    
-    // Микрофон
+    const btnPrevMic = document.getElementById('btn-preview-mic');
+    const btnPrevCam = document.getElementById('btn-preview-cam');
+    const btnCallMic = document.getElementById('btn-call-mic');
+    const btnCallCam = document.getElementById('btn-call-cam');
+
     if (isAudioEnabled) {
-        audioBtnPrev.textContent = '🎤';
-        audioBtnPrev.className = 'bg-white/95 backdrop-blur-md text-slate-800 p-3 rounded-full hover:bg-slate-50 transition border border-slate-200/60 shadow-lg w-12 h-12 flex items-center justify-center text-lg';
-        audioBtnCall.textContent = '🎤';
-        audioBtnCall.className = 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100/80 p-4 rounded-full transition flex items-center justify-center w-14 h-14 text-xl shadow-sm focus:outline-none';
+        if (btnPrevMic) { btnPrevMic.innerHTML = SVGS.micOn; btnPrevMic.classList.remove('active-red'); }
+        if (btnCallMic) { btnCallMic.innerHTML = SVGS.micOn; btnCallMic.classList.add('active-red'); }
     } else {
-        audioBtnPrev.textContent = '🔇';
-        audioBtnPrev.className = 'bg-rose-50 text-rose-600 p-3 rounded-full hover:bg-rose-100 transition border border-rose-200/60 shadow-lg w-12 h-12 flex items-center justify-center text-lg';
-        audioBtnCall.textContent = '🔇';
-        audioBtnCall.className = 'bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100/80 p-4 rounded-full transition flex items-center justify-center w-14 h-14 text-xl shadow-sm focus:outline-none';
+        if (btnPrevMic) { btnPrevMic.innerHTML = SVGS.micOff; btnPrevMic.classList.add('active-red'); }
+        if (btnCallMic) { btnCallMic.innerHTML = SVGS.micOff; btnCallMic.classList.remove('active-red'); }
     }
 
-    // Камера
     if (isVideoEnabled) {
-        videoBtnPrev.textContent = '📷';
-        videoBtnPrev.className = 'bg-white/95 backdrop-blur-md text-slate-800 p-3 rounded-full hover:bg-slate-50 transition border border-slate-200/60 shadow-lg w-12 h-12 flex items-center justify-center text-lg';
-        videoBtnCall.textContent = '📷';
-        videoBtnCall.className = 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100/80 p-4 rounded-full transition flex items-center justify-center w-14 h-14 text-xl shadow-sm focus:outline-none';
+        if (btnPrevCam) { btnPrevCam.innerHTML = SVGS.camOn; btnPrevCam.classList.remove('active-red'); }
+        if (btnCallCam) { btnCallCam.innerHTML = SVGS.camOn; btnCallCam.classList.add('active-red'); }
     } else {
-        videoBtnPrev.textContent = '🚫';
-        videoBtnPrev.className = 'bg-rose-50 text-rose-600 p-3 rounded-full hover:bg-rose-100 transition border border-rose-200/60 shadow-lg w-12 h-12 flex items-center justify-center text-lg';
-        videoBtnCall.textContent = '🚫';
-        videoBtnCall.className = 'bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100/80 p-4 rounded-full transition flex items-center justify-center w-14 h-14 text-xl shadow-sm focus:outline-none';
+        if (btnPrevCam) { btnPrevCam.innerHTML = SVGS.camOff; btnPrevCam.classList.add('active-red'); }
+        if (btnCallCam) { btnCallCam.innerHTML = SVGS.camOff; btnCallCam.classList.remove('active-red'); }
     }
 }
 
-document.getElementById('btn-preview-mic').onclick = toggleAudio;
-document.getElementById('btn-call-mic').onclick = toggleAudio;
-document.getElementById('btn-preview-cam').onclick = toggleVideo;
-document.getElementById('btn-call-cam').onclick = toggleVideo;
+// Bind buttons
+if (document.getElementById('btn-preview-mic')) document.getElementById('btn-preview-mic').onclick = toggleAudio;
+if (ui.btnCallMic) ui.btnCallMic.onclick = toggleAudio;
+if (document.getElementById('btn-preview-cam')) document.getElementById('btn-preview-cam').onclick = toggleVideo;
+if (ui.btnCallCam) ui.btnCallCam.onclick = toggleVideo;
 
-// 2. Вход и Создание комнат
-document.getElementById('btn-create').onclick = () => {
-    // Генерация случайного ID комнаты
-    const roomId = Math.random().toString(36).substr(2, 6).toUpperCase();
-    startCall(roomId);
-};
+// 2. Joining & Creating Rooms
+if (ui.btnCreate) {
+    ui.btnCreate.onclick = () => {
+        const roomId = Math.random().toString(36).substr(2, 6).toUpperCase();
+        startCall(roomId);
+    };
+}
 
-document.getElementById('btn-join').onclick = () => {
-    const roomId = ui.roomInput.value.trim().toUpperCase();
-    if (roomId) startCall(roomId);
-};
+if (ui.btnJoin) {
+    ui.btnJoin.onclick = () => {
+        const roomId = ui.roomInput.value.trim().toUpperCase();
+        if (roomId) startCall(roomId);
+    };
+}
 
 function startCall(roomId) {
     currentRoomId = roomId;
-    ui.currentRoomText.textContent = roomId;
+    if (ui.currentRoomIdText) {
+        ui.currentRoomIdText.textContent = roomId;
+    }
     
-    ui.lobby.classList.add('hidden');
-    ui.call.classList.remove('hidden');
-    ui.call.classList.add('flex'); // Восстанавливаем flex layout
+    if (ui.callScreen) {
+        ui.callScreen.style.display = 'flex';
+    }
+    
+    // Clear chat list
+    if (ui.chatMessages) {
+        ui.chatMessages.innerHTML = '';
+    }
     
     addLocalVideoToGrid();
     connectWebSocket();
+    
+    // Start speech recognition if mic is on
+    if (recognition && isAudioEnabled) {
+        try { recognition.start(); } catch (err) {}
+    }
+}
+
+// 3. Grid sizing algorithm
+function updateVideoGridClass() {
+    const grid = ui.videoGrid;
+    if (!grid) return;
+    const tilesCount = grid.children.length;
+    
+    grid.className = 'video-grid';
+    if (tilesCount <= 1) {
+        grid.classList.add('grid-1-player');
+    } else if (tilesCount === 2) {
+        grid.classList.add('grid-2-players');
+    } else {
+        grid.classList.add('grid-many-players');
+    }
 }
 
 function addLocalVideoToGrid() {
-    ui.videoGrid.innerHTML = '';
+    if (!ui.videoGrid) return;
+    
+    // Remove if already present
+    const existing = document.getElementById('local-video-container');
+    if (existing) existing.remove();
+    
     const container = document.createElement('div');
-    container.className = 'video-container';
+    container.className = 'video-wrapper';
     container.id = 'local-video-container';
     
     const video = document.createElement('video');
     video.srcObject = localStream;
     video.autoplay = true;
-    video.muted = true; // Свой звук всегда замьючен
+    video.muted = true;
     video.playsInline = true;
     video.className = 'mirrored';
     
+    // Camera off placeholder
+    const camPlaceholder = document.createElement('div');
+    camPlaceholder.className = 'camera-off-placeholder';
+    camPlaceholder.id = 'local-cam-placeholder';
+    camPlaceholder.style.display = isVideoEnabled ? 'none' : 'flex';
+    camPlaceholder.innerHTML = `
+        <div class="placeholder-avatar">${getInitials(myUser.first_name)}</div>
+        <div class="placeholder-text">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:1.2rem;height:1.2rem;"><line x1="2" x2="22" y1="2" y2="22"></line><path d="M7 7H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4M21 9l-4 3v-2a2 2 0 0 0-2-2H9"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            Камера выключена
+        </div>
+    `;
+
+    // Mic muted overlay
+    const micMutedOverlay = document.createElement('div');
+    micMutedOverlay.className = 'mic-muted-overlay';
+    micMutedOverlay.id = 'local-mic-muted';
+    micMutedOverlay.style.display = isAudioEnabled ? 'none' : 'flex';
+    micMutedOverlay.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:1.1rem;height:1.1rem;"><line x1="2" x2="22" y1="2" y2="22"></line><path d="M18.89 13.23A7.12 7.12 0 0 0 19 11v-1M5 10v1a7 7 0 0 0 10.8 5.9M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+    `;
+
+    // Speech subtitle bubble
+    const subtitleBubble = document.createElement('div');
+    subtitleBubble.className = 'speech-subtitle-bubble';
+    subtitleBubble.id = 'local-subtitle-bubble';
+
     const nameLabel = document.createElement('div');
-    nameLabel.className = 'absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-800 shadow-sm border border-slate-200/50 z-10';
+    nameLabel.className = 'participant-label';
     nameLabel.textContent = myUser.first_name + ' (Вы)';
 
     container.appendChild(video);
+    container.appendChild(camPlaceholder);
+    container.appendChild(micMutedOverlay);
+    container.appendChild(subtitleBubble);
     container.appendChild(nameLabel);
+    
     ui.videoGrid.appendChild(container);
+    updateVideoGridClass();
 }
 
-// 3. Сигналинг (Подключение к серверу)
+// 2. Room Link copy
+if (ui.btnCopyLink) {
+    ui.btnCopyLink.onclick = () => {
+        const link = window.location.origin + '?room=' + currentRoomId;
+        navigator.clipboard.writeText(link).then(() => {
+            tg.showAlert('Ссылка на конференцию скопирована');
+        }).catch(() => {
+            alert('Ссылка: ' + link);
+        });
+    };
+}
+
+// Toggle chat side drawer
+if (ui.btnToggleChat) {
+    ui.btnToggleChat.onclick = () => {
+        if (ui.chatDrawer) {
+            ui.chatDrawer.classList.toggle('hidden');
+        }
+    };
+}
+
+// 16. Chat Text messaging
+function sendTextMessage() {
+    if (!ui.chatInput) return;
+    const text = ui.chatInput.value.trim();
+    if (!text) return;
+    
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'speech-text',
+            text: text
+        }));
+    }
+    
+    addChatMessage(myUser.first_name, text, true);
+    ui.chatInput.value = '';
+}
+
+if (ui.btnSendChat) ui.btnSendChat.onclick = sendTextMessage;
+if (ui.chatInput) {
+    ui.chatInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            sendTextMessage();
+        }
+    };
+}
+
+function addChatMessage(senderName, text, isSelf) {
+    if (!ui.chatMessages) return;
+    
+    const msg = document.createElement('div');
+    msg.className = `msg-bubble ${isSelf ? 'self' : ''}`;
+    
+    const sender = document.createElement('div');
+    sender.className = `msg-sender ${isSelf ? 'self' : ''}`;
+    sender.textContent = isSelf ? 'Вы' : senderName;
+    
+    const txt = document.createElement('div');
+    txt.className = 'msg-text';
+    txt.textContent = text;
+    
+    msg.appendChild(sender);
+    msg.appendChild(txt);
+    ui.chatMessages.appendChild(msg);
+    
+    ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+}
+
+// 16. Web Speech API Speech-to-Text
+function initSpeechToText() {
+    const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Speech) {
+        if (ui.speechStatusText) ui.speechStatusText.textContent = 'STT не поддерживается';
+        return;
+    }
+    
+    recognition = new Speech();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'ru-RU';
+    
+    recognition.onstart = () => {
+        if (ui.speechDot) ui.speechDot.classList.add('listening');
+        if (ui.speechStatusText) ui.speechStatusText.textContent = 'Слушаю речь';
+    };
+    
+    recognition.onend = () => {
+        if (ui.speechDot) ui.speechDot.classList.remove('listening');
+        if (ui.speechStatusText) ui.speechStatusText.textContent = 'Тишина';
+        
+        // Auto restart if mic remains active and call continues
+        if (currentRoomId && isAudioEnabled) {
+            try { recognition.start(); } catch (err) {}
+        }
+    };
+    
+    recognition.onresult = (event) => {
+        const index = event.resultIndex;
+        const transcript = event.results[index][0].transcript.trim();
+        if (transcript) {
+            sendSpeechTranscript(transcript);
+        }
+    };
+}
+
+function sendSpeechTranscript(transcript) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'speech-text',
+            text: transcript
+        }));
+    }
+    
+    addChatMessage(myUser.first_name, transcript, true);
+    displaySubtitle('local', transcript);
+}
+
+function displaySubtitle(peerId, text) {
+    const bubbleId = peerId === 'local' ? 'local-subtitle-bubble' : `subtitle-bubble-${peerId}`;
+    const bubble = document.getElementById(bubbleId);
+    if (bubble) {
+        bubble.textContent = text;
+        bubble.classList.add('active');
+        
+        if (bubble.timeoutId) clearTimeout(bubble.timeoutId);
+        
+        bubble.timeoutId = setTimeout(() => {
+            bubble.classList.remove('active');
+        }, 3500);
+    }
+}
+
+// Sync mic and cam states over WebSocket
+function broadcastMediaState() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'media-state',
+            audio: isAudioEnabled,
+            video: isVideoEnabled
+        }));
+    }
+}
+
+// 3. WebSockets Signalling & State sync
 function connectWebSocket() {
-    // Подключаемся к бэкенду на Render
-    ws = new WebSocket(`wss://agile-coll.onrender.com`);
+    // Dynamically choose secure/unsecure WS protocol based on window location
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const serverHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'localhost:3000' 
+        : 'agile-coll.onrender.com';
+        
+    ws = new WebSocket(`${protocol}://${serverHost}`);
     
     ws.onopen = () => {
         ws.send(JSON.stringify({
             type: 'join',
             roomId: currentRoomId,
-            initData: tg.initData, // Отправляем подпись для бэкенда
+            initData: tg.initData,
             user: myUser
         }));
+        
+        // Sync media state as soon as we connect
+        setTimeout(broadcastMediaState, 500);
     };
     
     ws.onmessage = async (event) => {
@@ -195,15 +492,16 @@ function connectWebSocket() {
         switch(data.type) {
             case 'joined':
                 isHost = data.isHost;
-                if (isHost) ui.btnAdmin.classList.remove('hidden');
+                if (isHost && ui.btnAdminPanel) {
+                    ui.btnAdminPanel.style.display = 'block';
+                }
                 
-                // Звоним всем, кто уже в комнате
+                // Ring everyone in the room
                 data.peers.forEach(peer => createPeerConnection(peer.id, peer.user, true));
                 updateAdminPanel();
                 break;
                 
             case 'user-joined':
-                // Кто-то зашел, ждем от него звонка (offer)
                 createPeerConnection(data.peerId, data.user, false);
                 updateAdminPanel();
                 break;
@@ -230,7 +528,9 @@ function connectWebSocket() {
                 
             case 'host-assigned':
                 isHost = true;
-                ui.btnAdmin.classList.remove('hidden');
+                if (ui.btnAdminPanel) {
+                    ui.btnAdminPanel.style.display = 'block';
+                }
                 updateAdminPanel();
                 break;
                 
@@ -239,8 +539,19 @@ function connectWebSocket() {
                 break;
                 
             case 'kicked':
-                tg.showAlert('Вы были удалены из конференции', () => leaveCall());
-                if (!tg.isExpanded) leaveCall(); // Фолбек для браузера
+                tg.showAlert('Вы были удалены из конференции организатором');
+                leaveCall();
+                break;
+                
+            case 'media-state':
+                // Sync remote participant mic & cam state visually
+                handleRemoteMediaState(data.sender, data.audio, data.video);
+                break;
+                
+            case 'speech-text':
+                // Display remote text in chat and as tile subtitle overlay
+                addChatMessage(data.senderName || 'Собеседник', data.text, false);
+                displaySubtitle(data.sender, data.text);
                 break;
                 
             case 'error':
@@ -249,14 +560,18 @@ function connectWebSocket() {
                 break;
         }
     };
+    
+    ws.onclose = () => {
+        console.log('WS Connection closed');
+    };
 }
 
-// 4. Логика WebRTC (Установка P2P соединения)
+// 4. WebRTC Connection Setup
 function createPeerConnection(peerId, user, isCaller) {
     const pc = new RTCPeerConnection(ICE_SERVERS);
-    peerConnections[peerId] = { pc, user };
+    peerConnections[peerId] = { pc, user, audio: true, video: true };
     
-    // Передаем свой медиапоток собеседнику
+    // Add local media tracks to peer connection
     localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
     
     pc.onicecandidate = (event) => {
@@ -266,23 +581,24 @@ function createPeerConnection(peerId, user, isCaller) {
     };
     
     pc.ontrack = (event) => {
-        // Отрисовка видео собеседника (избегаем дубликатов для аудио+видео треков)
         if (!document.getElementById(`video-${peerId}`)) {
             addRemoteVideo(peerId, event.streams[0], user);
         }
     };
     
     if (isCaller) {
-        pc.createOffer().then(offer => pc.setLocalDescription(offer)).then(() => {
-            ws.send(JSON.stringify({ type: 'offer', target: peerId, sdp: pc.localDescription }));
-        });
+        pc.createOffer()
+            .then(offer => pc.setLocalDescription(offer))
+            .then(() => {
+                ws.send(JSON.stringify({ type: 'offer', target: peerId, sdp: pc.localDescription }));
+            });
     }
 }
 
 async function handleOffer(data) {
     let peer = peerConnections[data.caller];
-    if (!peer) { // Если offer пришел чуть раньше user-joined
-        createPeerConnection(data.caller, data.user || {first_name: 'Участник'}, false);
+    if (!peer) {
+        createPeerConnection(data.caller, data.user || { first_name: 'Участник' }, false);
         peer = peerConnections[data.caller];
     }
     
@@ -294,9 +610,12 @@ async function handleOffer(data) {
     ws.send(JSON.stringify({ type: 'answer', target: data.caller, sdp: pc.localDescription }));
 }
 
+// Render remote participant tile
 function addRemoteVideo(peerId, stream, user) {
+    if (!ui.videoGrid) return;
+    
     const container = document.createElement('div');
-    container.className = 'video-container';
+    container.className = 'video-wrapper';
     container.id = `video-container-${peerId}`;
     
     const video = document.createElement('video');
@@ -305,56 +624,119 @@ function addRemoteVideo(peerId, stream, user) {
     video.autoplay = true;
     video.playsInline = true;
     
+    // Camera off placeholder
+    const camPlaceholder = document.createElement('div');
+    camPlaceholder.className = 'camera-off-placeholder';
+    camPlaceholder.id = `cam-placeholder-${peerId}`;
+    // Initially hide until states synced
+    camPlaceholder.style.display = 'none'; 
+    camPlaceholder.innerHTML = `
+        <div class="placeholder-avatar">${getInitials(user?.first_name)}</div>
+        <div class="placeholder-text">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:1.2rem;height:1.2rem;"><line x1="2" x2="22" y1="2" y2="22"></line><path d="M7 7H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4M21 9l-4 3v-2a2 2 0 0 0-2-2H9"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            Камера выключена
+        </div>
+    `;
+
+    // Mic muted overlay
+    const micMutedOverlay = document.createElement('div');
+    micMutedOverlay.className = 'mic-muted-overlay';
+    micMutedOverlay.id = `mic-muted-${peerId}`;
+    micMutedOverlay.style.display = 'none';
+    micMutedOverlay.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:1.1rem;height:1.1rem;"><line x1="2" x2="22" y1="2" y2="22"></line><path d="M18.89 13.23A7.12 7.12 0 0 0 19 11v-1M5 10v1a7 7 0 0 0 10.8 5.9M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+    `;
+
+    // Speech subtitle bubble
+    const subtitleBubble = document.createElement('div');
+    subtitleBubble.className = 'speech-subtitle-bubble';
+    subtitleBubble.id = `subtitle-bubble-${peerId}`;
+
     const nameLabel = document.createElement('div');
-    nameLabel.className = 'absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-800 shadow-sm border border-slate-200/50 z-10';
+    nameLabel.className = 'participant-label';
     nameLabel.textContent = user?.first_name || 'Участник';
 
     container.appendChild(video);
+    container.appendChild(camPlaceholder);
+    container.appendChild(micMutedOverlay);
+    container.appendChild(subtitleBubble);
     container.appendChild(nameLabel);
+    
     ui.videoGrid.appendChild(container);
+    updateVideoGridClass();
+    
+    // Request state sync from this remote client
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        // Broadcast local media state so they know our setup
+        broadcastMediaState();
+    }
+}
+
+function handleRemoteMediaState(senderId, audioEnabled, videoEnabled) {
+    if (peerConnections[senderId]) {
+        peerConnections[senderId].audio = audioEnabled;
+        peerConnections[senderId].video = videoEnabled;
+    }
+    
+    const camPlaceholder = document.getElementById(`cam-placeholder-${senderId}`);
+    if (camPlaceholder) {
+        camPlaceholder.style.display = videoEnabled ? 'none' : 'flex';
+    }
+    
+    const micMuted = document.getElementById(`mic-muted-${senderId}`);
+    if (micMuted) {
+        micMuted.style.display = audioEnabled ? 'none' : 'flex';
+    }
 }
 
 function removePeer(peerId) {
     if (peerConnections[peerId]) {
         peerConnections[peerId].pc.close();
         delete peerConnections[peerId];
-        const videoEl = document.getElementById(`video-container-${peerId}`);
-        if (videoEl) videoEl.remove();
+        const tile = document.getElementById(`video-container-${peerId}`);
+        if (tile) tile.remove();
+        updateVideoGridClass();
         updateAdminPanel();
     }
 }
 
-// 5. Демонстрация экрана (только для ПК и поддерживаемых устройств)
-document.getElementById('btn-call-share').onclick = async () => {
-    try {
-        if (displayStream) return stopScreenShare();
-        
-        displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const screenTrack = displayStream.getVideoTracks()[0];
-        
-        // Подменяем трек камеры на трек экрана у всех пиров
-        for (let peerId in peerConnections) {
-            const sender = peerConnections[peerId].pc.getSenders().find(s => s.track.kind === 'video');
-            if (sender) sender.replaceTrack(screenTrack);
+// 15. Screen Sharing
+if (ui.btnCallShare) {
+    ui.btnCallShare.onclick = async () => {
+        try {
+            if (displayStream) return stopScreenShare();
+            
+            displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            const screenTrack = displayStream.getVideoTracks()[0];
+            
+            // Swapping video track on peer connections
+            for (let peerId in peerConnections) {
+                const sender = peerConnections[peerId].pc.getSenders().find(s => s.track && s.track.kind === 'video');
+                if (sender) {
+                    sender.replaceTrack(screenTrack);
+                }
+            }
+            
+            // Swap local preview stream
+            const localVideo = document.querySelector('#local-video-container video');
+            if (localVideo) {
+                localVideo.srcObject = displayStream;
+                localVideo.classList.remove('mirrored');
+            }
+            
+            ui.btnCallShare.classList.add('active-red');
+            
+            // Hide camera placeholder when screen-sharing is live
+            const localPlaceholder = document.getElementById('local-cam-placeholder');
+            if (localPlaceholder) localPlaceholder.style.display = 'none';
+            
+            screenTrack.onended = () => stopScreenShare();
+        } catch (e) {
+            console.error(e);
+            tg.showAlert('Трансляция экрана отменена или не поддерживается вашим устройством');
         }
-        
-        // Показываем свой экран себе же
-        const localVideo = document.querySelector('#local-video-container video');
-        if (localVideo) {
-            localVideo.srcObject = displayStream;
-            localVideo.classList.remove('mirrored');
-        }
-        
-        document.getElementById('btn-call-share').classList.remove('bg-slate-50', 'text-slate-700', 'border-slate-200');
-        document.getElementById('btn-call-share').classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
-        
-        // Если пользователь остановил шаринг через системное меню браузера
-        screenTrack.onended = () => stopScreenShare();
-        
-    } catch (e) {
-        tg.showAlert('Демонстрация экрана не поддерживается или отменена');
-    }
-};
+    };
+}
 
 function stopScreenShare() {
     if (!displayStream) return;
@@ -363,81 +745,109 @@ function stopScreenShare() {
     
     const cameraTrack = localStream.getVideoTracks()[0];
     
-    // Возвращаем камеру всем собеседникам
     for (let peerId in peerConnections) {
-        const sender = peerConnections[peerId].pc.getSenders().find(s => s.track.kind === 'video');
-        if (sender) sender.replaceTrack(cameraTrack);
+        const sender = peerConnections[peerId].pc.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (sender) {
+            sender.replaceTrack(cameraTrack);
+        }
     }
     
-    // Возвращаем камеру себе
     const localVideo = document.querySelector('#local-video-container video');
     if (localVideo) {
         localVideo.srcObject = localStream;
-        localVideo.classList.add('mirrored');
+        if (isVideoEnabled) localVideo.classList.add('mirrored');
     }
-    document.getElementById('btn-call-share').classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
-    document.getElementById('btn-call-share').classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+    
+    ui.btnCallShare.classList.remove('active-red');
+    
+    // Restore local video placeholder if camera is disabled
+    const localPlaceholder = document.getElementById('local-cam-placeholder');
+    if (localPlaceholder) {
+        localPlaceholder.style.display = isVideoEnabled ? 'none' : 'flex';
+    }
 }
 
-// 6. Панель Модерации и Права
-ui.btnAdmin.onclick = () => ui.adminPanel.classList.remove('hidden');
-document.getElementById('btn-close-admin').onclick = () => ui.adminPanel.classList.add('hidden');
+// Moderator Admin dialog panel controls
+if (ui.btnAdminPanel) {
+    ui.btnAdminPanel.onclick = () => {
+        if (ui.adminPanel) ui.adminPanel.style.display = 'flex';
+    };
+}
+
+if (ui.btnCloseAdmin) {
+    ui.btnCloseAdmin.onclick = () => {
+        if (ui.adminPanel) ui.adminPanel.style.display = 'none';
+    };
+}
 
 function updateAdminPanel() {
+    if (!ui.participantsList) return;
     ui.participantsList.innerHTML = '';
     
     const count = Object.keys(peerConnections).length;
     if (count === 0) {
-        ui.participantsList.innerHTML = '<div class="text-slate-400 text-center py-6 text-sm font-medium">В комнате больше никого нет</div>';
+        ui.participantsList.innerHTML = '<div style="color:var(--color-gray); text-align:center; padding:1.5rem; font-size:0.85rem; font-weight:600;">Нет активных участников</div>';
         return;
     }
-
+    
     for (let peerId in peerConnections) {
         const user = peerConnections[peerId].user;
         const item = document.createElement('div');
-        item.className = 'flex justify-between items-center bg-slate-50 border border-slate-100 p-3.5 rounded-2xl';
+        item.className = 'participant-item';
         
         let buttons = '';
         if (isHost) {
             buttons = `
-                <div class="flex gap-2">
-                    <button onclick="sendAdminCmd('mute_audio', '${peerId}')" class="bg-white border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 p-2.5 rounded-xl transition shadow-sm text-slate-600" title="Выключить микрофон">🔇</button>
-                    <button onclick="sendAdminCmd('mute_video', '${peerId}')" class="bg-white border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 p-2.5 rounded-xl transition shadow-sm text-slate-600" title="Выключить камеру">🚫</button>
-                    <button onclick="sendAdminCmd('kick', '${peerId}')" class="bg-white border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 p-2.5 rounded-xl transition shadow-sm text-slate-600" title="Исключить">❌</button>
+                <div class="participant-actions">
+                    <button onclick="sendAdminCmd('mute_audio', '${peerId}')" class="btn-mini" title="Заглушить">
+                        <svg style="width:0.9rem;height:0.9rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="1" x2="23" y1="1" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+                    </button>
+                    <button onclick="sendAdminCmd('mute_video', '${peerId}')" class="btn-mini" title="Выключить камеру">
+                        <svg style="width:0.9rem;height:0.9rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="1" x2="23" y1="1" y2="23"></line><path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34M10.59 10.59a4 4 0 1 0 5.66 5.66"></path></svg>
+                    </button>
+                    <button onclick="sendAdminCmd('kick', '${peerId}')" class="btn-mini" title="Исключить">
+                        <svg style="width:0.9rem;height:0.9rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" x2="6" y1="6" y2="18"></line><line x1="6" x2="18" y1="6" y2="18"></line></svg>
+                    </button>
                 </div>
             `;
         }
         
         item.innerHTML = `
-            <span class="font-semibold text-slate-800 truncate max-w-[120px] sm:max-w-[180px]">${user.first_name}</span>
+            <span class="participant-name">${user.first_name}</span>
             ${buttons}
         `;
         ui.participantsList.appendChild(item);
     }
 }
 
-// Глобальная функция для кнопок в HTML (из updateAdminPanel)
 window.sendAdminCmd = function(action, targetId) {
-    if (ws && isHost) ws.send(JSON.stringify({ type: action, target: targetId }));
-}
+    if (ws && isHost) {
+        ws.send(JSON.stringify({ type: action, target: targetId }));
+    }
+};
 
 function handleAdminAction(action) {
     if (action === 'mute_audio') {
         if (isAudioEnabled) toggleAudio();
-        tg.showAlert('Организатор отключил вам микрофон');
+        tg.showAlert('Организатор конференции отключил вам микрофон');
     } else if (action === 'mute_video') {
         if (isVideoEnabled) toggleVideo();
-        tg.showAlert('Организатор отключил вам камеру');
+        tg.showAlert('Организатор конференции отключил вам камеру');
     }
 }
 
-// 7. Завершение звонка
-document.getElementById('btn-leave').onclick = leaveCall;
+// 7. Leaving the call
+if (ui.btnLeave) ui.btnLeave.onclick = leaveCall;
 
 function leaveCall() {
     if (displayStream) stopScreenShare();
     
-    // Закрываем все WebRTC соединения
+    // Stop speech recognition
+    if (recognition) {
+        try { recognition.stop(); } catch(e) {}
+    }
+    
+    // Close connections
     for (let peerId in peerConnections) {
         peerConnections[peerId].pc.close();
     }
@@ -448,19 +858,27 @@ function leaveCall() {
         ws = null;
     }
     
-    // Сбрасываем UI
-    ui.call.classList.add('hidden');
-    ui.call.classList.remove('flex');
-    ui.lobby.classList.remove('hidden');
-    ui.adminPanel.classList.add('hidden');
+    // Reset call layout overlays
+    if (ui.callScreen) {
+        ui.callScreen.style.display = 'none';
+    }
+    if (ui.adminPanel) {
+        ui.adminPanel.style.display = 'none';
+    }
     
     isHost = false;
-    ui.btnAdmin.classList.add('hidden');
-    ui.videoGrid.innerHTML = '';
+    if (ui.btnAdminPanel) {
+        ui.btnAdminPanel.style.display = 'none';
+    }
+    if (ui.videoGrid) {
+        ui.videoGrid.innerHTML = '';
+    }
     
-    // Возвращаем поток в окно предпросмотра
-    ui.localPreview.srcObject = localStream;
+    // Restore stream preview
+    if (ui.localPreview) {
+        ui.localPreview.srcObject = localStream;
+    }
 }
 
-// Запуск при загрузке страницы
+// Initialize camera stream preview on startup
 initLocalMedia();
