@@ -90,6 +90,7 @@ wss.on('connection', (ws) => {
                 break;
             case 'media-state':
             case 'speech-text':
+            case 'remote-control':
                 handleBroadcast(ws, data);
                 break;
         }

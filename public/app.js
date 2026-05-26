@@ -28,6 +28,8 @@ let myUser = { id: Math.floor(Math.random() * 100000), first_name: 'Пользо
 let isAudioEnabled = true;
 let isVideoEnabled = true;
 let recognition; // Web Speech API
+let myRemoteId = Math.floor(100000 + Math.random() * 900000).toString();
+let controlledPartnerId = null;
 
 const ui = {
     entryAnimation: document.getElementById('entry-animation'),
@@ -63,11 +65,21 @@ const ui = {
     // Admin Modal UI
     adminPanel: document.getElementById('admin-panel'),
     btnCloseAdmin: document.getElementById('btn-close-admin'),
-    participantsList: document.getElementById('participants-list')
+    participantsList: document.getElementById('participants-list'),
+    
+    // Remote Control UI
+    btnCallRemote: document.getElementById('btn-call-remote'),
+    remotePanel: document.getElementById('remote-panel'),
+    btnCloseRemote: document.getElementById('btn-close-remote'),
+    myRemoteIdEl: document.getElementById('my-remote-id'),
+    remotePartnerIdInput: document.getElementById('remote-partner-id'),
+    btnConnectRemote: document.getElementById('btn-connect-remote'),
+    remoteCursor: document.getElementById('remote-cursor')
 };
 
 // 10. Entrance Animation (2 seconds minimum)
 window.addEventListener('DOMContentLoaded', () => {
+    if (ui.myRemoteIdEl) ui.myRemoteIdEl.textContent = myRemoteId;
     setTimeout(() => {
         if (ui.entryAnimation) {
             ui.entryAnimation.classList.add('fade-out');
@@ -554,6 +566,10 @@ function connectWebSocket() {
                 displaySubtitle(data.sender, data.text);
                 break;
                 
+            case 'remote-control':
+                handleRemoteControlMessage(data);
+                break;
+                
             case 'error':
                 alert(data.message);
                 leaveCall();
@@ -880,5 +896,143 @@ function leaveCall() {
     }
 }
 
+// ===== DARK / LIGHT THEME TOGGLE =====
+(function() {
+    const htmlEl = document.documentElement;
+    const btnToggle = document.getElementById('btn-theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const themeLabel = btnToggle ? btnToggle.querySelector('span') : null;
+    const headerLogoDot = document.getElementById('header-logo-dot');
+    const headerLogoBlack = document.getElementById('header-logo-black');
+
+    const SUN_SVG = `<path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><circle cx="12" cy="12" r="5"/>`;
+    const MOON_SVG = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            htmlEl.setAttribute('data-theme', 'dark');
+            if (themeIcon) themeIcon.innerHTML = SUN_SVG;
+            if (themeLabel) themeLabel.textContent = 'Светлая';
+            if (headerLogoDot) headerLogoDot.setAttribute('fill', '#F0EBE3');
+            if (headerLogoBlack) headerLogoBlack.setAttribute('stroke', '#F0EBE3');
+        } else {
+            htmlEl.removeAttribute('data-theme');
+            if (themeIcon) themeIcon.innerHTML = MOON_SVG;
+            if (themeLabel) themeLabel.textContent = 'Тёмная';
+            if (headerLogoDot) headerLogoDot.setAttribute('fill', '#121212');
+            if (headerLogoBlack) headerLogoBlack.setAttribute('stroke', '#121212');
+        }
+        localStorage.setItem('agile_call_theme', theme);
+    }
+
+    // Load saved theme preference
+    const savedTheme = localStorage.getItem('agile_call_theme') || 'light';
+    applyTheme(savedTheme);
+
+    if (btnToggle) {
+        btnToggle.addEventListener('click', () => {
+            const currentTheme = htmlEl.getAttribute('data-theme');
+            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+    }
+})();
+
 // Initialize camera stream preview on startup
 initLocalMedia();
+
+// Remote Control Logic
+if (ui.btnCallRemote) {
+    ui.btnCallRemote.onclick = () => {
+        if (ui.remotePanel) ui.remotePanel.style.display = 'flex';
+    };
+}
+if (ui.btnCloseRemote) {
+    ui.btnCloseRemote.onclick = () => {
+        if (ui.remotePanel) ui.remotePanel.style.display = 'none';
+    };
+}
+if (ui.btnConnectRemote) {
+    ui.btnConnectRemote.onclick = () => {
+        const targetId = ui.remotePartnerIdInput.value.trim();
+        if (targetId && targetId !== myRemoteId) {
+            controlledPartnerId = targetId;
+            ui.btnConnectRemote.textContent = 'Подключено';
+            ui.btnConnectRemote.style.backgroundColor = 'var(--color-black)';
+            ui.btnCallRemote.classList.add('active-red');
+            if (ui.remotePanel) ui.remotePanel.style.display = 'none';
+            if (tg && tg.showAlert) {
+                tg.showAlert('Вы подключились к устройству. Ваши движения мыши и клики транслируются.');
+            } else {
+                alert('Вы подключились к устройству. Ваши движения мыши и клики транслируются.');
+            }
+        } else {
+            controlledPartnerId = null;
+            ui.btnConnectRemote.textContent = 'Подключиться';
+            ui.btnConnectRemote.style.backgroundColor = 'var(--color-red)';
+            ui.btnCallRemote.classList.remove('active-red');
+        }
+    };
+}
+
+document.addEventListener('mousemove', (e) => {
+    if (controlledPartnerId && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'remote-control',
+            targetRemoteId: controlledPartnerId,
+            action: 'mousemove',
+            x: e.clientX / window.innerWidth,
+            y: e.clientY / window.innerHeight
+        }));
+    }
+});
+
+document.addEventListener('click', (e) => {
+    // Prevent sending click when clicking on the connect button itself
+    if (e.target.id === 'btn-connect-remote' || e.target.id === 'btn-close-remote' || e.target.id === 'btn-call-remote' || e.target.id === 'remote-partner-id') return;
+    
+    if (controlledPartnerId && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'remote-control',
+            targetRemoteId: controlledPartnerId,
+            action: 'click',
+            x: e.clientX / window.innerWidth,
+            y: e.clientY / window.innerHeight
+        }));
+    }
+});
+
+function handleRemoteControlMessage(data) {
+    if (data.targetRemoteId !== myRemoteId) return;
+    
+    if (data.action === 'mousemove') {
+        if (ui.remoteCursor) {
+            ui.remoteCursor.style.display = 'block';
+            ui.remoteCursor.style.left = (data.x * window.innerWidth) + 'px';
+            ui.remoteCursor.style.top = (data.y * window.innerHeight) + 'px';
+        }
+    } else if (data.action === 'click') {
+        const clickX = data.x * window.innerWidth;
+        const clickY = data.y * window.innerHeight;
+        
+        // Hide fake cursor temporarily so elementFromPoint doesn't hit it
+        if (ui.remoteCursor) {
+            ui.remoteCursor.style.display = 'none';
+        }
+        
+        const el = document.elementFromPoint(clickX, clickY);
+        if (el && typeof el.click === 'function') {
+            el.click();
+        }
+        
+        // Restore fake cursor and show visual effect
+        if (ui.remoteCursor) {
+            ui.remoteCursor.style.display = 'block';
+            ui.remoteCursor.style.left = clickX + 'px';
+            ui.remoteCursor.style.top = clickY + 'px';
+            ui.remoteCursor.style.transform = 'scale(0.7)';
+            setTimeout(() => {
+                ui.remoteCursor.style.transform = 'scale(1)';
+            }, 150);
+        }
+    }
+}
