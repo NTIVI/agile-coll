@@ -775,6 +775,24 @@
             color: var(--color-text-normal);
         }
 
+        .btn-close-chat {
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            padding: 0.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-smooth);
+            border-radius: 50%;
+        }
+
+        .btn-close-chat:hover {
+            color: var(--color-red);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
         .speech-indicator {
             display: flex;
             align-items: center;
@@ -1440,11 +1458,16 @@
             <!-- 16. Chat drawer (Voice transcription & messages) -->
             <div id="chat-drawer" class="chat-drawer">
                 <div class="chat-header">
-                    <span>Транскрипция встречи</span>
-                    <div class="speech-indicator">
-                        <div id="speech-dot" class="speech-dot"></div>
-                        <span id="speech-status-text">Тишина</span>
+                    <div style="display: flex; align-items: center; gap: 0.8rem;">
+                        <span>Транскрипция встречи</span>
+                        <div class="speech-indicator">
+                            <div id="speech-dot" class="speech-dot"></div>
+                            <span id="speech-status-text">Тишина</span>
+                        </div>
                     </div>
+                    <button id="btn-close-chat" class="btn-close-chat" aria-label="Закрыть чат">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:1.1rem;height:1.1rem;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                 </div>
                 <div id="chat-messages" class="chat-messages">
                     <!-- Dynamic messages -->

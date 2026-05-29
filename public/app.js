@@ -451,6 +451,15 @@ if (ui.btnToggleChat) {
     };
 }
 
+const btnCloseChat = document.getElementById('btn-close-chat');
+if (btnCloseChat) {
+    btnCloseChat.onclick = () => {
+        if (ui.chatDrawer) {
+            ui.chatDrawer.classList.add('hidden');
+        }
+    };
+}
+
 // 16. Chat Text messaging
 function sendTextMessage() {
     if (!ui.chatInput) return;
