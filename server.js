@@ -18,10 +18,29 @@ const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 // Ловим ошибки поллинга, чтобы сервер не крашился при дисконнектах
 bot.on('polling_error', (error) => console.log('Telegram Bot Polling Error:', error.message));
 
+// Установка кнопки меню (в левом нижнем углу чата) для открытия Web App прямо внутри Telegram
+bot.setChatMenuButton({
+    menu_button: {
+        type: 'web_app',
+        text: 'Agile Call',
+        web_app: { url: 'https://agile-coll.vercel.app/' }
+    }
+}).catch((err) => console.error('Ошибка установки кнопки меню:', err));
+
 // Обработка команды /start
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     const name = msg.from.first_name || 'друг';
+    
+    // Также устанавливаем кнопку меню индивидуально для чата, чтобы гарантировать отображение
+    bot.setChatMenuButton({
+        chat_id: chatId,
+        menu_button: {
+            type: 'web_app',
+            text: 'Agile Call',
+            web_app: { url: 'https://agile-coll.vercel.app/' }
+        }
+    }).catch((err) => console.error('Ошибка установки индивидуальной кнопки меню:', err));
     
     bot.sendMessage(chatId, `Привет, ${name}!\n\nДобро пожаловать в Agile Call — профессиональные видеоконференции прямо внутри Telegram.\n\nСоздавайте комнаты, транслируйте экран и общайтесь с качественным звуком и видео!\n\n---\n*Данный проект был создан [Agile Business](https://agile-business-pro.com/)*`, {
         parse_mode: 'Markdown',
