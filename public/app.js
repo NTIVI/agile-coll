@@ -41,6 +41,8 @@ let recognition; // Web Speech API
 let myRemoteId = Math.floor(100000 + Math.random() * 900000).toString();
 let controlledPartnerId = null;
 let myClientId = null;
+let activeDisplayMode = 'grid'; // 'grid' | 'speaker' | 'carousel'
+let carouselIndex = 0;
 
 const ui = {
     entryAnimation: document.getElementById('entry-animation'),
@@ -273,15 +275,99 @@ function startCall(roomId) {
 function updateVideoGridClass() {
     const grid = ui.videoGrid;
     if (!grid) return;
-    const tilesCount = grid.children.length;
     
-    grid.className = 'video-grid';
-    if (tilesCount <= 1) {
-        grid.classList.add('grid-1-player');
-    } else if (tilesCount === 2) {
-        grid.classList.add('grid-2-players');
+    // Clear any previous mode classes and scroll rows
+    grid.classList.remove('mode-grid', 'mode-speaker', 'mode-carousel', 'grid-1-player', 'grid-2-players', 'grid-many-players');
+    
+    // 1. If we have a scroll-row from a previous Speaker mode, flatten it back so all tiles are direct children of #video-grid
+    const scrollRow = grid.querySelector('.speaker-scroll-row');
+    if (scrollRow) {
+        const children = Array.from(scrollRow.children);
+        children.forEach(child => grid.appendChild(child));
+        scrollRow.remove();
+    }
+    
+    // Get all wrapper children
+    const tiles = Array.from(grid.querySelectorAll('.video-wrapper'));
+    const tilesCount = tiles.length;
+    
+    // Reset all wrappers to visible and remove focused classes
+    tiles.forEach(tile => {
+        tile.style.display = 'block';
+        tile.classList.remove('main-focus', 'active-slide');
+    });
+    
+    // Hide carousel controls by default
+    const carouselControls = document.getElementById('carousel-controls');
+    if (carouselControls) carouselControls.style.display = 'none';
+    
+    if (activeDisplayMode === 'speaker' && tilesCount > 1) {
+        grid.classList.add('mode-speaker');
+        
+        // Find which tile should be in focus:
+        // Priority: 1. Remote screenshare, 2. First remote video, 3. Local video
+        let focusTile = tiles.find(tile => tile.id !== 'local-video-container');
+        if (!focusTile) focusTile = tiles[0]; // Fallback to local
+        
+        if (focusTile) {
+            focusTile.classList.add('main-focus');
+            
+            // Create horizontal scroll row for all other tiles
+            const row = document.createElement('div');
+            row.className = 'speaker-scroll-row';
+            
+            tiles.forEach(tile => {
+                if (tile !== focusTile) {
+                    row.appendChild(tile);
+                }
+            });
+            grid.appendChild(row);
+        }
+    } else if (activeDisplayMode === 'carousel' && tilesCount > 0) {
+        grid.classList.add('mode-carousel');
+        
+        // Clamp carouselIndex
+        if (carouselIndex >= tilesCount) carouselIndex = 0;
+        if (carouselIndex < 0) carouselIndex = tilesCount - 1;
+        
+        tiles.forEach((tile, idx) => {
+            if (idx === carouselIndex) {
+                tile.classList.add('active-slide');
+                tile.style.display = 'block';
+            } else {
+                tile.style.display = 'none';
+            }
+        });
+        
+        // Show carousel controls
+        if (carouselControls) {
+            carouselControls.style.display = 'flex';
+            
+            // Render dot indicators
+            const indicators = document.getElementById('carousel-indicators');
+            if (indicators) {
+                indicators.innerHTML = '';
+                tiles.forEach((_, idx) => {
+                    const dot = document.createElement('div');
+                    dot.className = `carousel-dot ${idx === carouselIndex ? 'active' : ''}`;
+                    dot.onclick = () => {
+                        carouselIndex = idx;
+                        updateVideoGridClass();
+                    };
+                    indicators.appendChild(dot);
+                });
+            }
+        }
     } else {
-        grid.classList.add('grid-many-players');
+        // Standard Grid Mode
+        grid.classList.add('mode-grid');
+        if (tilesCount <= 1) {
+            grid.classList.add('grid-1-player');
+        } else if (tilesCount === 2) {
+            grid.classList.add('grid-2-players');
+        } else {
+            grid.classList.add('grid-many-players');
+        }
     }
 }
 
@@ -1171,5 +1257,86 @@ function handleRemoteControlMessage(data) {
             cancelable: true
         });
         activeEl.dispatchEvent(keyEvent);
+    }
+}
+
+// ===== DISPLAY MODE SWITCHER & RESPONSIVE UX =====
+const btnToggleViewMode = document.getElementById('btn-toggle-view-mode');
+if (btnToggleViewMode) {
+    btnToggleViewMode.onclick = () => {
+        if (activeDisplayMode === 'grid') {
+            activeDisplayMode = 'speaker';
+            btnToggleViewMode.querySelector('span').textContent = 'Докладчик';
+        } else if (activeDisplayMode === 'speaker') {
+            activeDisplayMode = 'carousel';
+            btnToggleViewMode.querySelector('span').textContent = 'Карусель';
+            carouselIndex = 0;
+        } else {
+            activeDisplayMode = 'grid';
+            btnToggleViewMode.querySelector('span').textContent = 'Сетка';
+        }
+        updateVideoGridClass();
+        showAlert(`Режим показа изменен на: ${btnToggleViewMode.querySelector('span').textContent}`);
+    };
+}
+
+const btnCarouselPrev = document.getElementById('btn-carousel-prev');
+const btnCarouselNext = document.getElementById('btn-carousel-next');
+
+if (btnCarouselPrev) {
+    btnCarouselPrev.onclick = () => {
+        const grid = ui.videoGrid;
+        if (!grid) return;
+        const tilesCount = grid.querySelectorAll('.video-wrapper').length;
+        if (tilesCount <= 1) return;
+        carouselIndex = (carouselIndex - 1 + tilesCount) % tilesCount;
+        updateVideoGridClass();
+    };
+}
+
+if (btnCarouselNext) {
+    btnCarouselNext.onclick = () => {
+        const grid = ui.videoGrid;
+        if (!grid) return;
+        const tilesCount = grid.querySelectorAll('.video-wrapper').length;
+        if (tilesCount <= 1) return;
+        carouselIndex = (carouselIndex + 1) % tilesCount;
+        updateVideoGridClass();
+    };
+}
+
+// Swipe support on Mobile Touch devices
+let touchStartX = 0;
+let touchEndX = 0;
+
+if (ui.videoGrid) {
+    ui.videoGrid.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    
+    ui.videoGrid.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+}
+
+function handleSwipe() {
+    if (activeDisplayMode !== 'carousel') return;
+    const diff = touchStartX - touchEndX;
+    const threshold = 50; // swipe threshold in px
+    
+    const grid = ui.videoGrid;
+    if (!grid) return;
+    const tilesCount = grid.querySelectorAll('.video-wrapper').length;
+    if (tilesCount <= 1) return;
+    
+    if (diff > threshold) {
+        // Swipe left -> Next tile
+        carouselIndex = (carouselIndex + 1) % tilesCount;
+        updateVideoGridClass();
+    } else if (diff < -threshold) {
+        // Swipe right -> Prev tile
+        carouselIndex = (carouselIndex - 1 + tilesCount) % tilesCount;
+        updateVideoGridClass();
     }
 }
