@@ -30,7 +30,7 @@ bot.onText(/\/start/, (msg) => {
                 [
                     {
                         text: 'Открыть Agile Call',
-                        web_app: { url: 'https://agile-call.vercel.app' }
+                        web_app: { url: 'https://agile-coll.vercel.app/' }
                     }
                 ]
             ]
