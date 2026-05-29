@@ -611,7 +611,7 @@ function connectWebSocket() {
             case 'joined':
                 isHost = data.isHost;
                 myClientId = data.yourId;
-                if (isHost && ui.btnAdminPanel) {
+                if (ui.btnAdminPanel) {
                     ui.btnAdminPanel.style.display = 'block';
                 }
                 
@@ -893,7 +893,9 @@ function stopScreenShare() {
 // Moderator Admin dialog panel controls
 if (ui.btnAdminPanel) {
     ui.btnAdminPanel.onclick = () => {
-        if (ui.adminPanel) ui.adminPanel.style.display = 'flex';
+        if (ui.adminPanel) {
+            ui.adminPanel.style.display = ui.adminPanel.style.display === 'flex' ? 'none' : 'flex';
+        }
     };
 }
 

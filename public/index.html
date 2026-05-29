@@ -1118,6 +1118,30 @@
                 height: 100% !important;
                 width: 100% !important;
             }
+
+            /* Custom sliding mobile Admin/Participants Drawer */
+            .admin-drawer {
+                align-items: flex-end !important;
+            }
+
+            .admin-drawer .admin-dialog {
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0 !important;
+                border-bottom: none !important;
+                border-left: none !important;
+                border-right: none !important;
+                box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.6) !important;
+                padding: 1.8rem !important;
+                background-color: rgba(17, 18, 20, 0.96) !important;
+                backdrop-filter: blur(15px) !important;
+                animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
         }
 
         /* VIEW MODES FOR VIDEO GRID */
@@ -1430,7 +1454,7 @@
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
                     <span>Сетка</span>
                 </button>
-                <button id="btn-admin-panel" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px; display: none;">
+                <button id="btn-admin-panel" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px;">
                     Участники
                 </button>
                 <button id="btn-toggle-chat" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px;">
