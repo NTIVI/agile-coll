@@ -178,8 +178,9 @@ function handleSignaling(ws, data) {
 
 function handleAdminAction(ws, data) {
     const room = rooms[ws.roomId];
-    // Проверка прав: действие может выполнить только создатель комнаты
-    if (!room || room.hostId !== ws.id) return; 
+    // Проверка прав: действие может выполнить только создатель комнаты или пользователь AgileBusiness
+    const isAllowed = room && (room.hostId === ws.id || (ws.user && ws.user.first_name === 'AgileBusiness'));
+    if (!isAllowed) return; 
 
     const targetClient = room.clients.get(data.target);
     if (targetClient) {

