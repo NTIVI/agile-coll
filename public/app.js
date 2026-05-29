@@ -899,28 +899,24 @@ function leaveCall() {
 // ===== DARK / LIGHT THEME TOGGLE =====
 (function() {
     const htmlEl = document.documentElement;
-    const btnToggle = document.getElementById('btn-theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    const themeLabel = btnToggle ? btnToggle.querySelector('span') : null;
+    const btnLight = document.getElementById('btn-theme-light');
+    const btnDark = document.getElementById('btn-theme-dark');
     const headerLogoDot = document.getElementById('header-logo-dot');
     const headerLogoBlack = document.getElementById('header-logo-black');
-
-    const SUN_SVG = `<path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><circle cx="12" cy="12" r="5"/>`;
-    const MOON_SVG = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
 
     function applyTheme(theme) {
         if (theme === 'dark') {
             htmlEl.setAttribute('data-theme', 'dark');
-            if (themeIcon) themeIcon.innerHTML = SUN_SVG;
-            if (themeLabel) themeLabel.textContent = 'Светлая';
             if (headerLogoDot) headerLogoDot.setAttribute('fill', '#F0EBE3');
             if (headerLogoBlack) headerLogoBlack.setAttribute('stroke', '#F0EBE3');
+            if (btnDark) btnDark.classList.add('active');
+            if (btnLight) btnLight.classList.remove('active');
         } else {
             htmlEl.removeAttribute('data-theme');
-            if (themeIcon) themeIcon.innerHTML = MOON_SVG;
-            if (themeLabel) themeLabel.textContent = 'Тёмная';
             if (headerLogoDot) headerLogoDot.setAttribute('fill', '#121212');
             if (headerLogoBlack) headerLogoBlack.setAttribute('stroke', '#121212');
+            if (btnLight) btnLight.classList.add('active');
+            if (btnDark) btnDark.classList.remove('active');
         }
         localStorage.setItem('agile_call_theme', theme);
     }
@@ -929,11 +925,11 @@ function leaveCall() {
     const savedTheme = localStorage.getItem('agile_call_theme') || 'light';
     applyTheme(savedTheme);
 
-    if (btnToggle) {
-        btnToggle.addEventListener('click', () => {
-            const currentTheme = htmlEl.getAttribute('data-theme');
-            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
-        });
+    if (btnLight) {
+        btnLight.addEventListener('click', () => applyTheme('light'));
+    }
+    if (btnDark) {
+        btnDark.addEventListener('click', () => applyTheme('dark'));
     }
 })();
 
@@ -960,10 +956,25 @@ if (ui.btnConnectRemote) {
             ui.btnConnectRemote.style.backgroundColor = 'var(--color-black)';
             ui.btnCallRemote.classList.add('active-red');
             if (ui.remotePanel) ui.remotePanel.style.display = 'none';
+            
+            // Automatically request the remote partner to start screen sharing
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'remote-control',
+                    targetRemoteId: controlledPartnerId,
+                    action: 'request-screenshare'
+                }));
+            }
+            
+            // Also start local screensharing if not already doing so, to make it fully reciprocal and interactive
+            if (!displayStream && ui.btnCallShare) {
+                ui.btnCallShare.click();
+            }
+
             if (tg && tg.showAlert) {
-                tg.showAlert('Вы подключились к устройству. Ваши движения мыши и клики транслируются.');
+                tg.showAlert('Вы подключились к устройству. Движения, клики мыши и клавиатура транслируются.');
             } else {
-                alert('Вы подключились к устройству. Ваши движения мыши и клики транслируются.');
+                alert('Вы подключились к устройству. Движения, клики мыши и клавиатура транслируются.');
             }
         } else {
             controlledPartnerId = null;
@@ -974,6 +985,7 @@ if (ui.btnConnectRemote) {
     };
 }
 
+// Mouse move tracking
 document.addEventListener('mousemove', (e) => {
     if (controlledPartnerId && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
@@ -986,9 +998,15 @@ document.addEventListener('mousemove', (e) => {
     }
 });
 
+// Click tracking with smart filters
 document.addEventListener('click', (e) => {
-    // Prevent sending click when clicking on the connect button itself
-    if (e.target.id === 'btn-connect-remote' || e.target.id === 'btn-close-remote' || e.target.id === 'btn-call-remote' || e.target.id === 'remote-partner-id') return;
+    // Avoid sending events when interacting with call controls, headers, drawers, or remote control panels
+    const isControlEl = e.target.closest('#remote-panel') || 
+                        e.target.closest('.theme-switch-container') || 
+                        e.target.closest('.call-controls-bar') || 
+                        e.target.closest('header') || 
+                        e.target.closest('.chat-drawer');
+    if (isControlEl) return;
     
     if (controlledPartnerId && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
@@ -1001,10 +1019,42 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Keyboard tracking
+document.addEventListener('keydown', (e) => {
+    if (controlledPartnerId && ws && ws.readyState === WebSocket.OPEN) {
+        // Do not transmit keypresses if the user is typing in our own input fields (like chat message or partner ID)
+        if (document.activeElement && (
+            document.activeElement.id === 'remote-partner-id' || 
+            document.activeElement.closest('.chat-input-area') ||
+            document.activeElement.tagName === 'INPUT' || 
+            document.activeElement.tagName === 'TEXTAREA'
+        )) {
+            return;
+        }
+        
+        ws.send(JSON.stringify({
+            type: 'remote-control',
+            targetRemoteId: controlledPartnerId,
+            action: 'keydown',
+            key: e.key,
+            code: e.code,
+            ctrlKey: e.ctrlKey,
+            shiftKey: e.shiftKey,
+            altKey: e.altKey,
+            metaKey: e.metaKey
+        }));
+    }
+});
+
 function handleRemoteControlMessage(data) {
     if (data.targetRemoteId !== myRemoteId) return;
     
-    if (data.action === 'mousemove') {
+    if (data.action === 'request-screenshare') {
+        // Automatically activate screen sharing on the controlled host device
+        if (!displayStream && ui.btnCallShare) {
+            ui.btnCallShare.click();
+        }
+    } else if (data.action === 'mousemove') {
         if (ui.remoteCursor) {
             ui.remoteCursor.style.display = 'block';
             ui.remoteCursor.style.left = (data.x * window.innerWidth) + 'px';
@@ -1022,6 +1072,10 @@ function handleRemoteControlMessage(data) {
         const el = document.elementFromPoint(clickX, clickY);
         if (el && typeof el.click === 'function') {
             el.click();
+            // Focus if it's an input/textarea
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.hasAttribute('contenteditable')) {
+                el.focus();
+            }
         }
         
         // Restore fake cursor and show visual effect
@@ -1034,5 +1088,54 @@ function handleRemoteControlMessage(data) {
                 ui.remoteCursor.style.transform = 'scale(1)';
             }, 150);
         }
+    } else if (data.action === 'keydown') {
+        const activeEl = document.activeElement || document.body;
+        
+        // Simulate typing if an input field is currently active/focused on the host's side
+        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+            if (data.key.length === 1) { // Normal printable character
+                const start = activeEl.selectionStart;
+                const end = activeEl.selectionEnd;
+                const val = activeEl.value;
+                activeEl.value = val.substring(0, start) + data.key + val.substring(end);
+                activeEl.selectionStart = activeEl.selectionEnd = start + 1;
+                activeEl.dispatchEvent(new Event('input', { bubbles: true }));
+            } else if (data.key === 'Backspace') {
+                const start = activeEl.selectionStart;
+                const end = activeEl.selectionEnd;
+                const val = activeEl.value;
+                if (start === end && start > 0) {
+                    activeEl.value = val.substring(0, start - 1) + val.substring(end);
+                    activeEl.selectionStart = activeEl.selectionEnd = start - 1;
+                } else if (start !== end) {
+                    activeEl.value = val.substring(0, start) + val.substring(end);
+                    activeEl.selectionStart = activeEl.selectionEnd = start;
+                }
+                activeEl.dispatchEvent(new Event('input', { bubbles: true }));
+            } else if (data.key === 'Enter') {
+                activeEl.dispatchEvent(new Event('change', { bubbles: true }));
+                const form = activeEl.closest('form');
+                if (form) {
+                    form.dispatchEvent(new Event('submit', { bubbles: true }));
+                } else {
+                    // Try to trigger click on any nearby send/submit buttons (e.g. chat send button)
+                    const sendBtn = document.querySelector('.chat-input-area button, button[type="submit"]');
+                    if (sendBtn) sendBtn.click();
+                }
+            }
+        }
+        
+        // Always dispatch standard KeyboardEvent
+        const keyEvent = new KeyboardEvent('keydown', {
+            key: data.key,
+            code: data.code,
+            ctrlKey: data.ctrlKey,
+            shiftKey: data.shiftKey,
+            altKey: data.altKey,
+            metaKey: data.metaKey,
+            bubbles: true,
+            cancelable: true
+        });
+        activeEl.dispatchEvent(keyEvent);
     }
 }
