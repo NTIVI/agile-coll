@@ -1,5 +1,15 @@
-const tg = window.Telegram.WebApp;
-tg.expand();
+const tg = window.Telegram?.WebApp;
+if (tg) {
+    tg.expand();
+}
+
+function showAlert(message) {
+    if (tg && tg.showAlert) {
+        tg.showAlert(message);
+    } else {
+        alert(message);
+    }
+}
 
 // WebRTC STUN Servers
 const ICE_SERVERS = {
@@ -30,6 +40,7 @@ let isVideoEnabled = true;
 let recognition; // Web Speech API
 let myRemoteId = Math.floor(100000 + Math.random() * 900000).toString();
 let controlledPartnerId = null;
+let myClientId = null;
 
 const ui = {
     entryAnimation: document.getElementById('entry-animation'),
@@ -146,7 +157,7 @@ async function initLocalMedia() {
         initSpeechToText();
     } catch (e) {
         console.error('Ошибка доступа к медиа:', e);
-        tg.showAlert('Разрешите доступ к камере и микрофону в настройках вашего устройства');
+        showAlert('Разрешите доступ к камере и микрофону в настройках вашего устройства');
     }
 }
 
@@ -338,7 +349,7 @@ if (ui.btnCopyLink) {
     ui.btnCopyLink.onclick = () => {
         const link = window.location.origin + '?room=' + currentRoomId;
         navigator.clipboard.writeText(link).then(() => {
-            tg.showAlert('Ссылка на конференцию скопирована');
+            showAlert('Ссылка на конференцию скопирована');
         }).catch(() => {
             alert('Ссылка: ' + link);
         });
@@ -504,6 +515,7 @@ function connectWebSocket() {
         switch(data.type) {
             case 'joined':
                 isHost = data.isHost;
+                myClientId = data.yourId;
                 if (isHost && ui.btnAdminPanel) {
                     ui.btnAdminPanel.style.display = 'block';
                 }
@@ -551,7 +563,7 @@ function connectWebSocket() {
                 break;
                 
             case 'kicked':
-                tg.showAlert('Вы были удалены из конференции организатором');
+                showAlert('Вы были удалены из конференции организатором');
                 leaveCall();
                 break;
                 
@@ -749,7 +761,7 @@ if (ui.btnCallShare) {
             screenTrack.onended = () => stopScreenShare();
         } catch (e) {
             console.error(e);
-            tg.showAlert('Трансляция экрана отменена или не поддерживается вашим устройством');
+            showAlert('Трансляция экрана отменена или не поддерживается вашим устройством');
         }
     };
 }
@@ -815,6 +827,9 @@ function updateAdminPanel() {
         if (isHost) {
             buttons = `
                 <div class="participant-actions">
+                    <button onclick="startAdminRemoteControl('${peerId}')" class="btn-mini" title="Удаленное управление" style="background-color: var(--color-blurple); color: white;">
+                        <svg style="width:0.9rem;height:0.9rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    </button>
                     <button onclick="sendAdminCmd('mute_audio', '${peerId}')" class="btn-mini" title="Заглушить">
                         <svg style="width:0.9rem;height:0.9rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="1" x2="23" y1="1" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
                     </button>
@@ -836,6 +851,29 @@ function updateAdminPanel() {
     }
 }
 
+window.startAdminRemoteControl = function(targetId) {
+    controlledPartnerId = targetId;
+    
+    // Automatically request the remote partner to start screen sharing
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'remote-control',
+            targetRemoteId: controlledPartnerId,
+            action: 'request-screenshare'
+        }));
+    }
+    
+    // Hide the admin panel modal so they can see the screen
+    if (ui.adminPanel) ui.adminPanel.style.display = 'none';
+    
+    // Toggle active state on the remote button
+    if (ui.btnCallRemote) {
+        ui.btnCallRemote.classList.add('active-red');
+    }
+    
+    showAlert('Запрошено удаленное управление пользователем. Его экран и управление транслируются.');
+};
+
 window.sendAdminCmd = function(action, targetId) {
     if (ws && isHost) {
         ws.send(JSON.stringify({ type: action, target: targetId }));
@@ -845,10 +883,10 @@ window.sendAdminCmd = function(action, targetId) {
 function handleAdminAction(action) {
     if (action === 'mute_audio') {
         if (isAudioEnabled) toggleAudio();
-        tg.showAlert('Организатор конференции отключил вам микрофон');
+        showAlert('Организатор конференции отключил вам микрофон');
     } else if (action === 'mute_video') {
         if (isVideoEnabled) toggleVideo();
-        tg.showAlert('Организатор конференции отключил вам камеру');
+        showAlert('Организатор конференции отключил вам камеру');
     }
 }
 
@@ -971,11 +1009,7 @@ if (ui.btnConnectRemote) {
                 ui.btnCallShare.click();
             }
 
-            if (tg && tg.showAlert) {
-                tg.showAlert('Вы подключились к устройству. Движения, клики мыши и клавиатура транслируются.');
-            } else {
-                alert('Вы подключились к устройству. Движения, клики мыши и клавиатура транслируются.');
-            }
+            showAlert('Вы подключились к устройству. Движения, клики мыши и клавиатура транслируются.');
         } else {
             controlledPartnerId = null;
             ui.btnConnectRemote.textContent = 'Подключиться';
@@ -1047,7 +1081,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 function handleRemoteControlMessage(data) {
-    if (data.targetRemoteId !== myRemoteId) return;
+    if (data.targetRemoteId !== myRemoteId && data.targetRemoteId !== myClientId) return;
     
     if (data.action === 'request-screenshare') {
         // Automatically activate screen sharing on the controlled host device

@@ -137,12 +137,12 @@ function handleJoin(ws, data) {
             }));
         }
     });
-
     // Отправляем успешный ответ новому участнику
     ws.send(JSON.stringify({
         type: 'joined',
         peers: peers,
-        isHost: isHost
+        isHost: isHost,
+        yourId: ws.id
     }));
 }
 
