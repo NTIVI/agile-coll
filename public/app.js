@@ -99,16 +99,16 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }, 2000);
     
-    // Parse URL room parameters
+    // Parse URL room parameters - Force to global room
     const urlParams = new URLSearchParams(window.location.search);
     const roomParam = urlParams.get('room') || urlParams.get('join');
     if (roomParam) {
         if (ui.roomInput) {
-            ui.roomInput.value = roomParam.toUpperCase();
+            ui.roomInput.value = 'AGILE_CALL';
         }
         // Delay joining slightly to let user see intro animation and finish camera init
         setTimeout(() => {
-            startCall(roomParam.toUpperCase());
+            startCall('AGILE_CALL');
         }, 2200);
     }
 });
@@ -235,22 +235,21 @@ if (ui.btnCallCam) ui.btnCallCam.onclick = toggleVideo;
 // 2. Joining & Creating Rooms
 if (ui.btnCreate) {
     ui.btnCreate.onclick = () => {
-        const roomId = Math.random().toString(36).substr(2, 6).toUpperCase();
-        startCall(roomId);
+        startCall('AGILE_CALL');
     };
 }
 
 if (ui.btnJoin) {
     ui.btnJoin.onclick = () => {
-        const roomId = ui.roomInput.value.trim().toUpperCase();
-        if (roomId) startCall(roomId);
+        startCall('AGILE_CALL');
     };
 }
 
 function startCall(roomId) {
-    currentRoomId = roomId;
+    // Force all participants into a single global room
+    currentRoomId = 'AGILE_CALL';
     if (ui.currentRoomIdText) {
-        ui.currentRoomIdText.textContent = roomId;
+        ui.currentRoomIdText.textContent = 'ОСНОВНОЙ ЗАЛ';
     }
     
     if (ui.callScreen) {

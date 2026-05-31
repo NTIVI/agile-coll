@@ -1382,19 +1382,18 @@
                         Подключение
                     </h2>
                     
-                    <button id="btn-create" class="btn" style="margin-bottom: 1.5rem;">
-                        Создать новую конференцию
+                    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1.5rem; line-height: 1.5;">
+                        Все пользователи автоматически подключаются к единой корпоративной видеоконференции Agile Call.
+                    </p>
+                    
+                    <button id="btn-join" class="btn" style="margin-bottom: 0;">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 0.3rem;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" x2="3" y1="12" y2="12"></line></svg>
+                        Подключиться к конференции
                     </button>
                     
-                    <div style="display: flex; gap: 0.8rem; align-items: flex-end;">
-                        <div class="input-group" style="flex-grow: 1; margin-bottom: 0;">
-                            <label class="input-label" for="room-input">Вход по идентификатору</label>
-                            <input type="text" id="room-input" class="custom-input" placeholder="Введите код комнаты (например, XXXXXX)" style="text-transform: uppercase;">
-                        </div>
-                        <button id="btn-join" class="btn btn-secondary" style="width: auto; padding: 1.1rem 2.2rem;">
-                            Войти
-                        </button>
-                    </div>
+                    <!-- Скрытые элементы для совместимости со скриптами -->
+                    <input type="hidden" id="room-input" value="AGILE_CALL">
+                    <button id="btn-create" style="display: none;"></button>
                 </div>
             </section>
 
