@@ -80,6 +80,14 @@ const ui = {
     btnCloseAdmin: document.getElementById('btn-close-admin'),
     participantsList: document.getElementById('participants-list'),
     
+    // Breakout UI
+    btnBreakoutPanel: document.getElementById('btn-breakout-panel'),
+    btnReturnToMain: document.getElementById('btn-return-to-main'),
+    breakoutPanel: document.getElementById('breakout-panel'),
+    btnCloseBreakout: document.getElementById('btn-close-breakout'),
+    breakoutParticipantsList: document.getElementById('breakout-participants-list'),
+    btnStartBreakout: document.getElementById('btn-start-breakout'),
+    
     // Remote Control UI
     btnCallRemote: document.getElementById('btn-call-remote'),
     remotePanel: document.getElementById('remote-panel'),
@@ -610,9 +618,7 @@ function connectWebSocket() {
             case 'joined':
                 isHost = data.isHost;
                 myClientId = data.yourId;
-                if (ui.btnAdminPanel) {
-                    ui.btnAdminPanel.style.display = 'block';
-                }
+                updateHostUI();
                 
                 // Ring everyone in the room
                 data.peers.forEach(peer => createPeerConnection(peer.id, peer.user, true));
@@ -646,10 +652,18 @@ function connectWebSocket() {
                 
             case 'host-assigned':
                 isHost = true;
-                if (ui.btnAdminPanel) {
-                    ui.btnAdminPanel.style.display = 'block';
-                }
+                updateHostUI();
                 updateAdminPanel();
+                break;
+                
+            case 'host-revoked':
+                isHost = false;
+                updateHostUI();
+                updateAdminPanel();
+                break;
+                
+            case 'move-to-breakout':
+                moveToBreakout(data.breakoutRoomId);
                 break;
                 
             case 'admin-action':
@@ -889,6 +903,101 @@ function stopScreenShare() {
     }
 }
 
+// Helper to update Host-specific UI elements
+function updateHostUI() {
+    const showAdmin = isHost;
+    const showBreakout = isHost && (currentRoomId === 'AGILE_CALL');
+    
+    if (ui.btnAdminPanel) {
+        ui.btnAdminPanel.style.display = showAdmin ? 'block' : 'none';
+    }
+    if (ui.btnBreakoutPanel) {
+        ui.btnBreakoutPanel.style.display = showBreakout ? 'block' : 'none';
+    }
+}
+
+// Relocate client to breakout room
+function moveToBreakout(breakoutRoomId) {
+    showAlert('Вы перемещаетесь в приватную беседу...');
+    
+    // Close existing connections
+    for (let peerId in peerConnections) {
+        peerConnections[peerId].pc.close();
+    }
+    peerConnections = {};
+    
+    // Clear other videos from grid
+    const tiles = Array.from(ui.videoGrid.querySelectorAll('.video-wrapper'));
+    tiles.forEach(tile => {
+        if (tile.id !== 'local-video-container') {
+            tile.remove();
+        }
+    });
+    
+    currentRoomId = breakoutRoomId;
+    if (ui.currentRoomIdText) {
+        ui.currentRoomIdText.textContent = 'ПРИВАТНЫЙ ЗАЛ';
+    }
+    
+    // Update breakout UI
+    if (ui.btnReturnToMain) {
+        ui.btnReturnToMain.style.display = 'block';
+    }
+    
+    updateHostUI();
+    
+    // Send join to the same socket for the new room
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'join',
+            roomId: currentRoomId,
+            initData: tg.initData,
+            user: myUser
+        }));
+    }
+}
+
+// Return client to main room
+function returnToMain() {
+    showAlert('Возвращение в основной звонок...');
+    
+    // Close existing connections
+    for (let peerId in peerConnections) {
+        peerConnections[peerId].pc.close();
+    }
+    peerConnections = {};
+    
+    // Clear other videos from grid
+    const tiles = Array.from(ui.videoGrid.querySelectorAll('.video-wrapper'));
+    tiles.forEach(tile => {
+        if (tile.id !== 'local-video-container') {
+            tile.remove();
+        }
+    });
+    
+    currentRoomId = 'AGILE_CALL';
+    if (ui.currentRoomIdText) {
+        ui.currentRoomIdText.textContent = 'ОСНОВНОЙ ЗАЛ';
+    }
+    
+    // Update breakout UI
+    if (ui.btnReturnToMain) {
+        ui.btnReturnToMain.style.display = 'none';
+    }
+    
+    updateHostUI();
+    
+    // Send join to the same socket for the main room
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'join',
+            roomId: currentRoomId,
+            initData: tg.initData,
+            user: myUser
+        }));
+    }
+}
+
 // Moderator Admin dialog panel controls
 if (ui.btnAdminPanel) {
     ui.btnAdminPanel.onclick = () => {
@@ -944,6 +1053,75 @@ function updateAdminPanel() {
             ${buttons}
         `;
         ui.participantsList.appendChild(item);
+    }
+}
+
+// Breakout Room panel controls
+if (ui.btnBreakoutPanel) {
+    ui.btnBreakoutPanel.onclick = () => {
+        if (ui.breakoutPanel) {
+            ui.breakoutPanel.style.display = ui.breakoutPanel.style.display === 'flex' ? 'none' : 'flex';
+            if (ui.breakoutPanel.style.display === 'flex') {
+                updateBreakoutParticipantsList();
+            }
+        }
+    };
+}
+
+if (ui.btnCloseBreakout) {
+    ui.btnCloseBreakout.onclick = () => {
+        if (ui.breakoutPanel) ui.breakoutPanel.style.display = 'none';
+    };
+}
+
+if (ui.btnReturnToMain) {
+    ui.btnReturnToMain.onclick = returnToMain;
+}
+
+if (ui.btnStartBreakout) {
+    ui.btnStartBreakout.onclick = () => {
+        const checkboxes = ui.breakoutParticipantsList.querySelectorAll('.breakout-checkbox:checked');
+        const selectedPeerIds = Array.from(checkboxes).map(cb => cb.value);
+        
+        if (selectedPeerIds.length === 0) {
+            showAlert('Выберите хотя бы одного участника для приватной беседы');
+            return;
+        }
+        
+        const breakoutId = 'BREAKOUT_' + Math.random().toString(36).substr(2, 9);
+        
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                type: 'start-breakout',
+                breakoutRoomId: breakoutId,
+                targets: selectedPeerIds
+            }));
+        }
+        
+        if (ui.breakoutPanel) ui.breakoutPanel.style.display = 'none';
+    };
+}
+
+function updateBreakoutParticipantsList() {
+    if (!ui.breakoutParticipantsList) return;
+    ui.breakoutParticipantsList.innerHTML = '';
+    
+    const count = Object.keys(peerConnections).length;
+    if (count === 0) {
+        ui.breakoutParticipantsList.innerHTML = '<div style="color:var(--color-gray); text-align:center; padding:1.5rem; font-size:0.85rem; font-weight:600;">Нет активных участников</div>';
+        return;
+    }
+    
+    for (let peerId in peerConnections) {
+        const user = peerConnections[peerId].user;
+        const item = document.createElement('div');
+        item.className = 'participant-item';
+        
+        item.innerHTML = `
+            <span class="participant-name">${user.first_name}</span>
+            <input type="checkbox" value="${peerId}" class="breakout-checkbox" style="width: 1.2rem; height: 1.2rem; cursor: pointer;">
+        `;
+        ui.breakoutParticipantsList.appendChild(item);
     }
 }
 
@@ -1015,11 +1193,16 @@ function leaveCall() {
     if (ui.adminPanel) {
         ui.adminPanel.style.display = 'none';
     }
+    if (ui.breakoutPanel) {
+        ui.breakoutPanel.style.display = 'none';
+    }
     
     isHost = false;
-    if (ui.btnAdminPanel) {
-        ui.btnAdminPanel.style.display = 'none';
+    updateHostUI();
+    if (ui.btnReturnToMain) {
+        ui.btnReturnToMain.style.display = 'none';
     }
+    
     if (ui.videoGrid) {
         ui.videoGrid.innerHTML = '';
     }

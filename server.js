@@ -83,7 +83,7 @@ function validateInitData(telegramInitData) {
     }
 }
 
-// Состояние комнат: roomId -> { hostId, clients: Map(socketId -> {ws, user}) }
+// Состояние комнат: roomId -> { hostId, originalHostId, clients: Map(socketId -> {ws, user}) }
 const rooms = {}; 
 
 wss.on('connection', (ws) => {
@@ -112,6 +112,9 @@ wss.on('connection', (ws) => {
             case 'remote-control':
                 handleBroadcast(ws, data);
                 break;
+            case 'start-breakout':
+                handleStartBreakout(ws, data);
+                break;
         }
     });
 
@@ -130,15 +133,30 @@ function handleJoin(ws, data) {
         return;
     }
 
+    // Если клиент уже находится в комнате, удаляем его из старой комнаты
+    if (ws.roomId && rooms[ws.roomId]) {
+        handleLeave(ws);
+    }
+
     ws.roomId = roomId;
     ws.user = user || { id: ws.id, first_name: 'Аноним' };
 
     if (!rooms[roomId]) {
-        rooms[roomId] = { hostId: ws.id, clients: new Map() };
+        rooms[roomId] = { hostId: ws.id, originalHostId: ws.id, clients: new Map() };
     }
 
     const room = rooms[roomId];
     room.clients.set(ws.id, ws);
+    
+    // Если возвращается оригинальный хост, восстанавливаем его права хоста
+    if (room.originalHostId === ws.id && room.hostId !== ws.id) {
+        const tempHostId = room.hostId;
+        room.hostId = ws.id;
+        const tempHost = room.clients.get(tempHostId);
+        if (tempHost) {
+            tempHost.send(JSON.stringify({ type: 'host-revoked' }));
+        }
+    }
     
     // Тот, кто первый, тот и хост (админ)
     const isHost = (room.hostId === ws.id);
@@ -162,6 +180,33 @@ function handleJoin(ws, data) {
         peers: peers,
         isHost: isHost,
         yourId: ws.id
+    }));
+}
+
+function handleStartBreakout(ws, data) {
+    const room = rooms[ws.roomId];
+    // Проверка прав: действие может выполнить только создатель комнаты или пользователь AgileBusiness
+    const isAllowed = room && (room.hostId === ws.id || (ws.user && ws.user.first_name === 'AgileBusiness'));
+    if (!isAllowed) return;
+
+    const { breakoutRoomId, targets } = data;
+    if (!breakoutRoomId || !targets || !Array.isArray(targets)) return;
+
+    // Перемещаем выбранных участников
+    targets.forEach(targetId => {
+        const client = room.clients.get(targetId);
+        if (client) {
+            client.send(JSON.stringify({
+                type: 'move-to-breakout',
+                breakoutRoomId: breakoutRoomId
+            }));
+        }
+    });
+
+    // Также перемещаем самого хоста
+    ws.send(JSON.stringify({
+        type: 'move-to-breakout',
+        breakoutRoomId: breakoutRoomId
     }));
 }
 

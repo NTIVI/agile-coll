@@ -1456,6 +1456,12 @@
                 <button id="btn-admin-panel" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px;">
                     Участники
                 </button>
+                <button id="btn-breakout-panel" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px; display: none;">
+                    Создать приватную беседу
+                </button>
+                <button id="btn-return-to-main" class="btn" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px; background-color: var(--color-green); display: none;" title="Вернуться в основной звонок">
+                    Вернуться в основной звонок
+                </button>
                 <button id="btn-toggle-chat" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px;">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                     Чат
@@ -1534,6 +1540,25 @@
         <svg viewBox="0 0 24 24" fill="var(--color-red)" stroke="var(--color-black)" stroke-width="1.5">
             <polygon points="5 3 19 12 11 14 15 21 12 22 8 15 5 19 5 3"></polygon>
         </svg>
+    </div>
+
+    <!-- Breakout Room Dialog Modal -->
+    <div id="breakout-panel" class="admin-drawer">
+        <div class="admin-dialog">
+            <div class="admin-title-row">
+                <span class="logo-text" style="font-size: 1.1rem;">Создать приватную беседу</span>
+                <button id="btn-close-breakout" class="btn btn-secondary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;">Отмена</button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                Выберите участников для перемещения в приватную беседу:
+            </p>
+            <div id="breakout-participants-list" class="participants-list">
+                <!-- List of remote users with checkboxes -->
+            </div>
+            <button id="btn-start-breakout" class="btn">
+                Подключиться
+            </button>
+        </div>
     </div>
 
     <!-- Admin Moderation Drawer Modal -->
