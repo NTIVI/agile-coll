@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,54 +7,57 @@
     <!-- Web App SDK Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
         :root {
-            /* DISCORD LIGHT THEME COLORS */
+            /* DISCORD DARK THEME COLORS */
+            --bg-primary: #313338;
+            --bg-secondary: #2b2d31;
+            --bg-tertiary: #1e1f22;
+            --bg-card: #383a40;
+            --bg-card-hover: #404249;
+            --bg-input: #1e1f22;
+            --bg-profile: #232428;
+            
+            --color-blurple: #5865F2;
+            --color-blurple-hover: #4752C4;
+            --color-green: #23A55A;
+            --color-green-hover: #1A7F43;
+            --color-red: #F23F43;
+            --color-red-hover: #DA373C;
+            --color-yellow: #F0B232;
+            
+            --color-text-normal: #F2F3F5;
+            --color-text-muted: #949BA4;
+            --color-text-link: #00A8FC;
+            
+            --border-subtle: 1px solid rgba(255, 255, 255, 0.06);
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            --shadow-subtle: 0 4px 16px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.4);
+            
+            --border-radius-lg: 12px;
+            --border-radius-md: 8px;
+            --border-radius-sm: 4px;
+        }
+
+        /* ===== LIGHT THEME FALLBACK ===== */
+        [data-theme="light"] {
             --bg-primary: #F2F3F5;
             --bg-secondary: #E3E5E8;
             --bg-tertiary: #EBEDF0;
             --bg-card: #FFFFFF;
             --bg-card-hover: #F2F3F5;
+            --bg-input: #E3E5E8;
+            --bg-profile: #EBEDF0;
+            
             --color-text-normal: #313338;
             --color-text-muted: #4E5058;
-            --color-blurple: #5865F2;
-            --color-blurple-hover: #4752C4;
-            --color-green: #23A55A;
-            --color-green-hover: #1A7F43;
-            --color-red: #DA373C;
-            --color-red-hover: #A92B2F;
-            
             --border-subtle: 1px solid rgba(0, 0, 0, 0.08);
-            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            
-            --shadow-subtle: 0 4px 16px rgba(0, 0, 0, 0.04);
-            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.08);
-            
-            --border-radius-lg: 16px;
-            --border-radius-md: 10px;
-            --border-radius-sm: 6px;
-        }
-
-        /* ===== DISCORD DARK THEME COLORS ===== */
-        [data-theme="dark"] {
-            --bg-primary: #313338;
-            --bg-secondary: #2b2d31;
-            --bg-tertiary: #1e1f22;
-            --bg-card: #111214;
-            --bg-card-hover: #2b2d31;
-            --color-text-normal: #F2F3F5;
-            --color-text-muted: #949BA4;
-            --border-subtle: 1px solid rgba(255, 255, 255, 0.06);
-            
-            --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.25);
-            --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        /* Smooth transitions */
-        body, body *, .card, .btn, .custom-input {
-            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            --shadow-subtle: 0 4px 16px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.1);
         }
 
         * {
@@ -67,60 +70,12 @@
             background-color: var(--bg-primary);
             color: var(--color-text-normal);
             font-family: var(--font-main);
-            overflow-x: hidden;
+            overflow: hidden;
             -webkit-font-smoothing: antialiased;
+            height: 100vh;
         }
 
-        /* ===== THEME PILL SWITCHER ===== */
-        .theme-switch-container {
-            display: flex;
-            background-color: var(--bg-primary);
-            padding: 4px;
-            border-radius: 30px;
-            border: var(--border-subtle);
-            gap: 2px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
-        }
-        
-        .btn-theme-pill {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: none;
-            border: none;
-            color: var(--color-text-muted);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-family: var(--font-main);
-            font-size: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            outline: none;
-            transition: var(--transition-smooth);
-        }
-        
-        .btn-theme-pill:hover {
-            color: var(--color-text-normal);
-            background-color: rgba(0, 0, 0, 0.03);
-        }
-        
-        [data-theme="dark"] .btn-theme-pill:hover {
-            background-color: rgba(255, 255, 255, 0.03);
-        }
-        
-        .btn-theme-pill.active {
-            background-color: var(--color-blurple);
-            color: #FFFFFF !important;
-            box-shadow: 0 2px 8px rgba(88, 101, 242, 0.35);
-        }
-        
-        .theme-icon-mini {
-            width: 1rem;
-            height: 1rem;
-            stroke-width: 2.5;
-        }
-
-        /* ===== ENTRIES & LOADER ===== */
+        /* ===== ENTRANCE LOADER ===== */
         .entry-overlay {
             position: fixed;
             inset: 0;
@@ -147,440 +102,802 @@
             text-align: center;
         }
 
-        .anim-logo {
-            margin-bottom: 2rem;
-            animation: scale-up 1.2s ease-out;
+        .agile-logo-spinner {
+            height: 90px;
+            width: auto;
+            margin-bottom: 1.5rem;
+            animation: pulse-agile 2s infinite ease-in-out;
+            filter: drop-shadow(0px 0px 10px rgba(242, 63, 67, 0.4));
         }
 
-        .logo-path-black {
-            stroke-dasharray: 200;
-            stroke-dashoffset: 200;
-            animation: draw 1.2s forwards cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .logo-path-red {
-            stroke-dasharray: 200;
-            stroke-dashoffset: 200;
-            animation: draw 1.2s forwards cubic-bezier(0.4, 0, 0.2, 1);
-            animation-delay: 0.3s;
-        }
-
-        .logo-dot {
-            opacity: 0;
-            transform: scale(0);
-            transform-origin: center;
-            animation: pop-in 0.4s forwards cubic-bezier(0.34, 1.56, 0.64, 1) 1s;
+        @keyframes pulse-agile {
+            0% { transform: scale(0.96); opacity: 0.8; }
+            50% { transform: scale(1.04); opacity: 1; filter: drop-shadow(0px 0px 18px rgba(242, 63, 67, 0.7)); }
+            100% { transform: scale(0.96); opacity: 0.8; }
         }
 
         .anim-title {
-            font-size: 2.4rem;
+            font-size: 1.8rem;
             font-weight: 800;
-            letter-spacing: 0.08em;
-            color: var(--color-text-normal);
+            letter-spacing: 0.05em;
+            color: var(--color-red);
             margin-bottom: 1.5rem;
-            opacity: 0;
-            transform: translateY(15px);
-            animation: fade-up 0.8s forwards cubic-bezier(0.4, 0, 0.2, 1) 0.7s;
         }
 
         .progress-bar-container {
-            width: 200px;
-            height: 6px;
-            background-color: rgba(88, 101, 242, 0.1);
-            border-radius: 3px;
+            width: 240px;
+            height: 4px;
+            background-color: rgba(242, 63, 67, 0.15);
+            border-radius: 2px;
             overflow: hidden;
         }
 
         .progress-bar-fill {
             height: 100%;
             width: 0%;
-            background-color: var(--color-blurple);
+            background-color: var(--color-red);
             animation: fill-progress 2s forwards linear;
         }
 
-        @keyframes draw { to { stroke-dashoffset: 0; } }
-        @keyframes scale-up { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
-        @keyframes fade-up { to { opacity: 1; transform: translateY(0); } }
         @keyframes fill-progress { to { width: 100%; } }
 
-        /* ===== MAIN INTERFACE ===== */
-        .app-container {
-            max-width: 1240px;
-            margin: 0 auto;
-            padding: 2.5rem 1.5rem 4rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.2rem 1.8rem;
-            background-color: var(--bg-secondary);
-            border-bottom: var(--border-subtle);
-            border-radius: var(--border-radius-lg);
-            margin-bottom: 2.5rem;
-            box-shadow: var(--shadow-subtle);
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .header-logo {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            text-decoration: none;
-            transition: var(--transition-smooth);
-        }
-        .header-logo:hover {
-            transform: scale(1.02);
-        }
-
-        .logo-text {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--color-text-normal);
-            letter-spacing: -0.02em;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .badge-status {
-            background-color: var(--color-blurple);
-            color: #FFFFFF;
-            padding: 0.4rem 0.9rem;
-            font-size: 0.78rem;
-            font-weight: 700;
-            border-radius: var(--border-radius-sm);
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 2.5rem;
-            flex-grow: 1;
-        }
-
-        @media (max-width: 960px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-        }
-
-        /* ===== CARDS & DETAILS ===== */
-        .card {
-            background-color: var(--bg-card);
-            border: var(--border-subtle);
-            padding: 2.2rem;
-            position: relative;
-            margin-bottom: 2rem;
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-subtle);
-        }
-
-        .card:hover {
-            box-shadow: var(--shadow-hover);
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 1.6rem;
-            color: var(--color-text-normal);
-            padding-bottom: 0.8rem;
-            border-bottom: var(--border-subtle);
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .input-group {
-            margin-bottom: 1.6rem;
-        }
-
-        .input-label {
-            display: block;
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: var(--color-text-muted);
-            text-transform: uppercase;
-            margin-bottom: 0.6rem;
-            letter-spacing: 0.05em;
-        }
-
-        .custom-input {
-            width: 100%;
-            background-color: var(--bg-secondary);
-            border: 1px solid transparent;
-            padding: 0.9rem 1.2rem;
-            font-family: var(--font-main);
-            font-size: 0.95rem;
-            color: var(--color-text-normal);
-            font-weight: 500;
-            outline: none;
-            border-radius: var(--border-radius-md);
-        }
-
-        .custom-input:focus {
-            background-color: var(--bg-card);
-            border-color: var(--color-blurple);
-            box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.15);
-        }
-
-        /* ===== BUTTONS ===== */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.6rem;
-            background-color: var(--color-blurple);
-            color: #FFFFFF;
-            border: none;
-            padding: 1rem 1.8rem;
-            font-family: var(--font-main);
-            font-size: 0.9rem;
-            font-weight: 700;
-            cursor: pointer;
-            outline: none;
-            border-radius: var(--border-radius-md);
-            box-shadow: 0 4px 12px rgba(88, 101, 242, 0.2);
-            width: 100%;
-        }
-
-        .btn:hover {
-            background-color: var(--color-blurple-hover);
-            box-shadow: 0 6px 16px rgba(88, 101, 242, 0.3);
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        .btn-secondary {
-            background-color: var(--bg-secondary);
-            color: var(--color-text-normal);
-            box-shadow: none;
-        }
-
-        .btn-secondary:hover {
-            background-color: var(--bg-card-hover);
-            box-shadow: var(--shadow-subtle);
-        }
-
-        .btn-icon-only {
-            width: 3.2rem;
-            height: 3.2rem;
-            padding: 0;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .icon {
-            width: 1.3rem;
-            height: 1.3rem;
-            stroke-width: 2.2;
-        }
-
-        /* ===== PREVIEW COMPONENT ===== */
-        .preview-wrapper {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16/10;
-            background-color: #111214;
-            overflow: hidden;
-            margin-bottom: 1.5rem;
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-subtle);
-        }
-
-        .preview-wrapper video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: var(--border-radius-lg);
-        }
-
-        .preview-controls {
-            position: absolute;
-            bottom: 1.2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 0.8rem;
-            z-index: 10;
-        }
-
-        /* ===== MARKETING / SIDE COLUMN ===== */
-        .info-section {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        .info-header {
-            font-size: 1.6rem;
-            font-weight: 800;
-            letter-spacing: -0.01em;
-            margin-bottom: 0.6rem;
-        }
-
-        .info-desc {
-            font-size: 0.98rem;
-            line-height: 1.6;
-            color: var(--color-text-muted);
-            margin-bottom: 0.5rem;
-        }
-
-        .benefit-card {
-            border: var(--border-subtle);
-            background-color: var(--bg-card);
-            padding: 1.5rem;
-            border-radius: var(--border-radius-lg);
-            margin-bottom: 1rem;
-            box-shadow: var(--shadow-subtle);
-        }
-
-        .benefit-card:hover {
-            transform: translateY(-2px);
-            background-color: var(--bg-card-hover);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .benefit-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            margin-bottom: 0.4rem;
-            color: var(--color-text-normal);
-        }
-
-        .benefit-text {
-            font-size: 0.88rem;
-            line-height: 1.6;
-            color: var(--color-text-muted);
-        }
-
-        .business-accent-box {
-            background-color: var(--color-blurple);
-            color: #FFFFFF;
-            padding: 1.8rem;
-            border-radius: var(--border-radius-lg);
-            text-align: center;
-            font-weight: 700;
-            font-size: 1.1rem;
-            line-height: 1.5;
-            margin-top: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 8px 24px rgba(88, 101, 242, 0.25);
-        }
-
-        .footer-site-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.8rem;
-            width: 100%;
-            text-decoration: none;
-            background-color: var(--bg-card);
-            color: var(--color-text-normal);
-            border: var(--border-subtle);
-            border-radius: var(--border-radius-lg);
-            padding: 1.2rem;
-            font-weight: 700;
-            font-size: 0.92rem;
-            box-shadow: var(--shadow-subtle);
-        }
-
-        .footer-site-link:hover {
-            background-color: var(--bg-secondary);
-            color: var(--color-blurple);
-            box-shadow: var(--shadow-hover);
-        }
-
-        /* ===== CALL OVERLAY & SCREEN ===== */
-        .call-overlay {
+        /* ===== USER REGISTRATION & AUTH OVERLAY ===== */
+        .auth-overlay {
             position: fixed;
             inset: 0;
             background-color: var(--bg-tertiary);
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            padding: 1.2rem;
-            overflow: hidden;
-        }
-
-        .call-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.8rem 1.4rem;
-            background-color: var(--bg-secondary);
-            border-radius: var(--border-radius-lg);
-            margin-bottom: 1.2rem;
-            box-shadow: var(--shadow-subtle);
-        }
-
-        .call-room-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            font-weight: 700;
-        }
-
-        .room-badge {
-            font-family: monospace;
-            background-color: var(--bg-primary);
-            color: var(--color-blurple);
-            padding: 0.4rem 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            font-size: 0.95rem;
-            border-radius: var(--border-radius-sm);
-        }
-
-        .call-actions-top {
-            display: flex;
-            gap: 0.8rem;
-        }
-
-        .call-main-container {
-            display: flex;
-            flex-grow: 1;
-            gap: 1.2rem;
-            height: calc(100vh - 12rem);
-            overflow: hidden;
-        }
-
-        @media (max-width: 900px) {
-            .call-main-container {
-                flex-direction: column;
-            }
-        }
-
-        /* ===== VIDEO GRID & WRAPPERS ===== */
-        .video-grid-container {
-            flex-grow: 1;
-            background-color: var(--bg-secondary);
-            border-radius: var(--border-radius-lg);
-            padding: 1.2rem;
-            overflow-y: auto;
+            z-index: 9990;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
+            background: radial-gradient(circle at center, #2f3136 0%, #1e1f22 100%);
+        }
+
+        .auth-card {
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-hover);
+            border: var(--border-subtle);
+            width: 100%;
+            max-width: 440px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            animation: modal-pop 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .auth-logo {
+            width: 60px;
+            height: 60px;
+            background-color: var(--color-blurple);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0 auto 12px auto;
+        }
+
+        .auth-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .auth-subtitle {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .avatar-selector-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .avatar-color-picker {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: var(--transition-smooth);
+        }
+
+        .color-option.selected {
+            border-color: #FFFFFF;
+            transform: scale(1.1);
+        }
+
+        .auth-switch-link {
+            font-size: 0.82rem;
+            color: var(--color-blurple);
+            text-decoration: none;
+            margin-top: 12px;
+            display: inline-block;
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition-smooth);
+        }
+
+        .auth-switch-link:hover {
+            color: var(--color-text-normal);
+            text-decoration: underline;
+        }
+
+        /* ===== MAIN AGILE CALL LAYOUT ===== */
+        .agile-app {
+            display: none; /* Shown after auth */
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 1. Servers column (left sidebar) */
+        .servers-sidebar {
+            width: 72px;
+            background-color: var(--bg-tertiary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0;
+            gap: 8px;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .server-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--bg-primary);
+            color: var(--color-text-normal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            position: relative;
+            outline: none;
+            border: none;
+        }
+
+        .server-btn:hover, .server-btn.active {
+            border-radius: 16px;
+            background-color: var(--color-blurple);
+            color: #FFFFFF;
+        }
+
+        .server-btn.active::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 14px;
+            width: 8px;
+            height: 20px;
+            background-color: #FFFFFF;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .server-btn.home-btn {
+            background-color: var(--bg-secondary);
+        }
+
+        .server-btn.home-btn:hover, .server-btn.home-btn.active {
+            background-color: var(--color-blurple);
+        }
+
+        .server-btn.add-btn {
+            background-color: var(--bg-secondary);
+            color: var(--color-green);
+        }
+
+        .server-btn.add-btn:hover {
+            background-color: var(--color-green);
+            color: #FFFFFF;
+        }
+
+        .server-divider {
+            width: 32px;
+            height: 2px;
+            background-color: var(--bg-card);
+            margin: 4px 0;
+            border-radius: 1px;
+        }
+
+        /* Tooltip simple */
+        .server-btn[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            left: 80px;
+            background-color: #111214;
+            color: #F2F3F5;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        /* 2. Channels column (sidebar) */
+        .channels-sidebar {
+            width: 240px;
+            background-color: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            border-right: 1px solid rgba(0,0,0,0.15);
+            z-index: 90;
+        }
+
+        .server-header {
+            height: 48px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .server-header:hover {
+            background-color: rgba(255,255,255,0.03);
+        }
+
+        .channels-list-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 12px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .channel-category {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .category-header:hover {
+            color: var(--color-text-normal);
+        }
+
+        .channel-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition-smooth);
+            gap: 6px;
+            position: relative;
+        }
+
+        .channel-item:hover {
+            background-color: rgba(255,255,255,0.04);
+            color: var(--color-text-normal);
+        }
+
+        .channel-item.active {
+            background-color: rgba(255,255,255,0.08);
+            color: var(--color-text-normal);
+            font-weight: 600;
+        }
+
+        /* Voice channel user listing */
+        .channel-users-list {
+            padding-left: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 2px;
+            margin-bottom: 6px;
+        }
+
+        .sidebar-user-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 6px;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            transition: var(--transition-smooth);
+        }
+
+        .sidebar-user-item:hover {
+            background-color: rgba(255,255,255,0.03);
+            color: var(--color-text-normal);
+        }
+
+        .sidebar-user-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sidebar-user-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: var(--color-blurple);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            border: 2px solid transparent;
+        }
+
+        .sidebar-user-item.speaking .sidebar-user-avatar {
+            border-color: var(--color-green);
+            animation: speaker-pulse 0.4s infinite alternate;
+        }
+
+        @keyframes speaker-pulse {
+            from { transform: scale(1); box-shadow: 0 0 4px var(--color-green); }
+            to { transform: scale(1.05); box-shadow: 0 0 8px var(--color-green); }
+        }
+
+        .sidebar-user-icons {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sidebar-user-icons svg {
+            width: 12px;
+            height: 12px;
+            color: var(--color-red);
+        }
+
+        /* User profile footer */
+        .user-profile-panel {
+            height: 52px;
+            background-color: var(--bg-profile);
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: var(--border-subtle);
+        }
+
+        .profile-user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 110px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: var(--border-radius-sm);
+            transition: var(--transition-smooth);
+        }
+
+        .profile-user-info:hover {
+            background-color: rgba(255,255,255,0.05);
+        }
+
+        .profile-avatar-wrapper {
+            position: relative;
+        }
+
+        .profile-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--color-blurple);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 10px;
+            height: 10px;
+            background-color: var(--color-green);
+            border-radius: 50%;
+            border: 2px solid var(--bg-profile);
+        }
+
+        .profile-names {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .profile-username {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--color-text-normal);
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        .profile-tag {
+            font-size: 0.65rem;
+            color: var(--color-text-muted);
+        }
+
+        .profile-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .profile-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--border-radius-sm);
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-smooth);
+        }
+
+        .profile-btn:hover {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--color-text-normal);
+        }
+
+        .profile-btn.active {
+            color: var(--color-red);
+        }
+
+        /* ===== 3. MAIN WINDOW AREA ===== */
+        .main-content {
+            flex-grow: 1;
+            background-color: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 3a. Home Screen Dashboard */
+        .home-screen {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+            padding: 40px;
+        }
+
+        .home-hero {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fade-in 0.8s ease-out;
+        }
+
+        .home-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 0.8rem;
+        }
+
+        .home-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--color-text-normal);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .home-subtitle {
+            font-size: 0.95rem;
+            color: var(--color-text-muted);
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .home-actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            max-width: 800px;
+            margin: 0 auto 30px auto;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .home-actions-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+
+        .home-card {
+            background-color: var(--bg-secondary);
+            border: var(--border-subtle);
+            border-radius: var(--border-radius-lg);
+            padding: 24px;
             box-shadow: var(--shadow-subtle);
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition-smooth);
+        }
+
+        .home-card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .home-card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--color-text-normal);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .home-card-desc {
+            font-size: 0.88rem;
+            color: var(--color-text-muted);
+            margin-bottom: 16px;
+            line-height: 1.45;
+            flex-grow: 1;
+        }
+
+        .home-input-group {
+            margin-bottom: 12px;
+        }
+
+        .home-input-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+            letter-spacing: 0.05em;
+        }
+
+        .home-input {
+            width: 100%;
+            background-color: var(--bg-input);
+            border: 1px solid transparent;
+            padding: 10px 14px;
+            border-radius: var(--border-radius-md);
+            color: var(--color-text-normal);
+            font-family: var(--font-main);
+            font-size: 0.9rem;
+            font-weight: 500;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .home-input:focus {
+            border-color: var(--color-blurple);
+        }
+
+        .btn-home {
+            width: 100%;
+            background-color: var(--color-blurple);
+            color: #FFFFFF;
+            font-family: var(--font-main);
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 10px 18px;
+            border: none;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-home:hover {
+            background-color: var(--color-blurple-hover);
+        }
+
+        .btn-home.btn-green {
+            background-color: var(--color-green);
+        }
+        .btn-home.btn-green:hover {
+            background-color: var(--color-green-hover);
+        }
+
+        .home-footer-info {
+            max-width: 800px;
+            margin: 0 auto;
+            border-top: var(--border-subtle);
+            padding-top: 24px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .home-footer-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .footer-info-card {
+            background-color: rgba(255,255,255,0.01);
+            border: var(--border-subtle);
+            padding: 16px;
+            border-radius: var(--border-radius-md);
+        }
+
+        .footer-info-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .footer-info-desc {
+            font-size: 0.78rem;
+            color: var(--color-text-muted);
+            line-height: 1.4;
+        }
+
+        /* 3b. Call Screen (Fullscreen video conference view) */
+        .call-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .call-header-bar {
+            height: 48px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            flex-shrink: 0;
+        }
+
+        .call-status-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .call-channel-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .call-status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--color-green);
+            font-weight: 600;
+            background-color: rgba(35, 165, 90, 0.1);
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .call-status-badge .badge-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--color-green);
+            border-radius: 50%;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        .call-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-action-btn {
+            background-color: var(--bg-card);
+            border: var(--border-subtle);
+            color: var(--color-text-normal);
+            padding: 6px 12px;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition-smooth);
+        }
+
+        .header-action-btn:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        /* Video / Main screen content */
+        .call-workspace {
+            display: flex;
+            flex-grow: 1;
+            height: calc(100vh - 48px - 80px); /* subtract header and footer toolbar */
+            position: relative;
+        }
+
+        /* 3c. Video Grid */
+        .video-grid-container {
+            flex-grow: 1;
+            background-color: var(--bg-primary);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 16px;
         }
 
         .video-grid {
             display: grid;
-            gap: 1.2rem;
+            gap: 12px;
             width: 100%;
             height: 100%;
             max-height: 100%;
@@ -604,13 +921,13 @@
         }
 
         .grid-many-players {
-            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             grid-auto-rows: 1fr;
         }
 
         .video-wrapper {
             position: relative;
-            background-color: #111214;
+            background-color: #1e1f22;
             border-radius: var(--border-radius-lg);
             overflow: hidden;
             width: 100%;
@@ -618,22 +935,21 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: var(--transition-smooth);
-            border: 2.5px solid transparent;
-            box-shadow: var(--shadow-subtle);
+            border: 2px solid transparent;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        /* Speaking indicator state (green avatar glowing border) */
+        /* Speaking indicator */
         .video-wrapper.speaking {
             border-color: var(--color-green);
-            box-shadow: 0 0 16px rgba(35, 165, 90, 0.4);
+            box-shadow: 0 0 12px var(--color-green);
         }
 
         .video-wrapper video {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: var(--border-radius-lg);
         }
 
         .mirrored {
@@ -642,15 +958,13 @@
 
         .participant-label {
             position: absolute;
-            bottom: 1rem;
-            left: 1rem;
-            background-color: rgba(17, 18, 20, 0.75);
-            backdrop-filter: blur(8px);
-            color: #FFFFFF;
-            padding: 0.4rem 0.8rem;
-            font-size: 0.78rem;
-            font-weight: 700;
+            bottom: 8px;
+            left: 8px;
+            background-color: rgba(17, 18, 20, 0.7);
+            padding: 4px 8px;
             border-radius: var(--border-radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
             z-index: 10;
         }
 
@@ -662,101 +976,159 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 1.2rem;
+            gap: 12px;
             z-index: 5;
-            transition: var(--transition-smooth);
         }
 
         .placeholder-avatar {
-            width: 5.5rem;
-            height: 5.5rem;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
             background-color: var(--color-blurple);
             color: #FFFFFF;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            font-weight: 800;
-            box-shadow: 0 4px 12px rgba(88, 101, 242, 0.35);
+            font-size: 2.2rem;
+            font-weight: 700;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            border: 3px solid transparent;
+            transition: var(--transition-smooth);
+        }
+
+        .video-wrapper.speaking .placeholder-avatar {
+            border-color: var(--color-green);
+            box-shadow: 0 0 20px var(--color-green);
         }
 
         .placeholder-text {
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: #949BA4;
+            font-size: 0.78rem;
+            color: var(--color-text-muted);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-        }
-
-        .placeholder-text svg {
-            width: 1.1rem;
-            height: 1.1rem;
-            color: var(--color-red);
+            gap: 4px;
         }
 
         .mic-muted-overlay {
             position: absolute;
-            top: 1rem;
-            right: 1rem;
+            top: 8px;
+            right: 8px;
             background-color: var(--color-red);
-            color: #FFFFFF;
+            color: white;
             border-radius: 50%;
-            width: 2.2rem;
-            height: 2.2rem;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 8;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
-        /* ===== SPEECH BUBBLES & TRANSCRIPT ===== */
+        .mic-muted-overlay svg {
+            width: 14px;
+            height: 14px;
+        }
+
         .speech-subtitle-bubble {
             position: absolute;
-            bottom: 4rem;
+            bottom: 48px;
             left: 50%;
             transform: translateX(-50%);
             background-color: rgba(17, 18, 20, 0.85);
-            backdrop-filter: blur(10px);
             color: #FFFFFF;
-            padding: 0.8rem 1.6rem;
+            padding: 6px 14px;
             border-radius: var(--border-radius-md);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.9rem;
-            font-weight: 600;
+            font-size: 0.85rem;
+            font-weight: 500;
             max-width: 80%;
             text-align: center;
             z-index: 15;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.25s ease;
+            transition: opacity 0.2s ease;
         }
 
         .speech-subtitle-bubble.active {
             opacity: 1;
         }
 
-        /* ===== CHAT DRAWER ===== */
+        /* 3d. Call Control Toolbar (bottom footer) */
+        .call-controls-bar {
+            height: 80px;
+            background-color: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-shrink: 0;
+            z-index: 95;
+            border-top: 1px solid rgba(0,0,0,0.2);
+        }
+
+        .btn-call {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--bg-card);
+            border: none;
+            color: var(--color-text-normal);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-smooth);
+            outline: none;
+            position: relative;
+        }
+
+        .btn-call:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        .btn-call.active-red {
+            background-color: var(--bg-card);
+            color: var(--color-text-normal);
+        }
+
+        /* When muted/disabled: red background */
+        .btn-call.muted, .btn-call:not(.active-red)[id="btn-call-mic"], .btn-call:not(.active-red)[id="btn-call-cam"] {
+            background-color: var(--color-red);
+            color: #FFFFFF;
+        }
+
+        .btn-call.muted:hover, .btn-call:not(.active-red)[id="btn-call-mic"]:hover, .btn-call:not(.active-red)[id="btn-call-cam"]:hover {
+            background-color: var(--color-red-hover);
+        }
+
+        .btn-call.btn-hangup {
+            background-color: var(--color-red);
+            color: #FFFFFF;
+            width: 56px;
+            height: 48px;
+            border-radius: 24px;
+        }
+
+        .btn-call.btn-hangup:hover {
+            background-color: var(--color-red-hover);
+        }
+
+        .btn-call svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* ===== 4. RIGHT CHAT DRAWER ===== */
         .chat-drawer {
             width: 320px;
             background-color: var(--bg-secondary);
-            border-radius: var(--border-radius-lg);
+            border-left: 1px solid rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
             height: 100%;
-            transition: var(--transition-smooth);
             flex-shrink: 0;
-            box-shadow: var(--shadow-subtle);
-            overflow: hidden;
-        }
-
-        @media (max-width: 900px) {
-            .chat-drawer {
-                width: 100%;
-                height: 220px;
-            }
+            z-index: 85;
+            transition: transform 0.2s ease;
         }
 
         .chat-drawer.hidden {
@@ -764,15 +1136,97 @@
         }
 
         .chat-header {
-            padding: 0.8rem 1.2rem;
-            border-bottom: var(--border-subtle);
-            font-weight: 700;
-            font-size: 0.85rem;
+            height: 48px;
+            border-bottom: 1px solid rgba(0,0,0,0.2);
+            padding: 0 16px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+
+        .speech-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            color: var(--color-text-muted);
+            font-weight: 500;
+        }
+
+        .speech-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--color-text-muted);
+            border-radius: 50%;
+        }
+
+        .speech-dot.listening {
+            background-color: var(--color-red);
+            animation: pulse-dot 1.2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             background-color: var(--bg-primary);
+        }
+
+        /* Custom Discord Chat Bubbles */
+        .msg-bubble {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 0.88rem;
+            line-height: 1.35;
+        }
+
+        .msg-sender {
+            font-weight: 600;
             color: var(--color-text-normal);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .msg-sender.self {
+            color: var(--color-blurple);
+        }
+
+        .msg-sender::after {
+            content: attr(data-time);
+            font-size: 0.68rem;
+            font-weight: 400;
+            color: var(--color-text-muted);
+        }
+
+        .msg-text {
+            color: #dbdee1;
+            word-break: break-word;
+        }
+
+        .chat-input-area {
+            padding: 16px;
+            background-color: var(--bg-primary);
+            border-top: var(--border-subtle);
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input-wrapper {
+            flex-grow: 1;
+            position: relative;
         }
 
         .btn-close-chat {
@@ -780,166 +1234,24 @@
             border: none;
             color: var(--color-text-muted);
             cursor: pointer;
-            padding: 0.3rem;
+            padding: 4px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            transition: var(--transition-smooth);
             border-radius: 50%;
         }
 
         .btn-close-chat:hover {
-            color: var(--color-red);
-            background-color: rgba(255, 255, 255, 0.08);
-        }
-
-        .speech-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.72rem;
-            color: var(--color-text-muted);
-        }
-
-        .speech-dot {
-            width: 10px;
-            height: 10px;
-            background-color: var(--color-green);
-            border-radius: 50%;
-        }
-
-        .speech-dot.listening {
-            animation: pulse-dot 1.2s infinite;
-            background-color: var(--color-red);
-        }
-
-        @keyframes pulse-dot {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.4); opacity: 0.4; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .chat-messages {
-            flex-grow: 1;
-            padding: 1.2rem;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            background-color: var(--bg-secondary);
-        }
-
-        .msg-bubble {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-md);
-            padding: 0.7rem 1rem;
-            max-width: 85%;
-            align-self: flex-start;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            border: none;
             color: var(--color-text-normal);
+            background-color: rgba(255,255,255,0.05);
         }
 
-        .msg-bubble.self {
-            align-self: flex-end;
-            background-color: var(--color-blurple);
-            color: #FFFFFF;
-            box-shadow: 0 2px 6px rgba(88, 101, 242, 0.2);
-        }
-
-        .msg-sender {
-            font-size: 0.72rem;
-            font-weight: 800;
-            margin-bottom: 0.3rem;
-            color: var(--color-blurple);
-        }
-
-        .msg-sender.self {
-            color: #FFFFFF;
-            opacity: 0.85;
-            text-align: right;
-        }
-
-        .msg-text {
-            font-size: 0.88rem;
-            line-height: 1.45;
-            font-weight: 500;
-            word-break: break-word;
-        }
-
-        .chat-input-area {
-            padding: 1rem;
-            border-top: var(--border-subtle);
-            display: flex;
-            gap: 0.6rem;
-            background-color: var(--bg-primary);
-        }
-
-        /* ===== CONTROLS PANEL ===== */
-        .call-controls-bar {
-            background-color: var(--bg-secondary);
-            border-radius: var(--border-radius-lg);
-            padding: 1rem 1.5rem;
-            margin-top: 1.2rem;
-            display: flex;
-            justify-content: center;
-            gap: 1.2rem;
-            box-shadow: var(--shadow-subtle);
-        }
-
-        .btn-call {
-            width: 3.4rem;
-            height: 3.4rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: var(--color-red); /* Muted/inactive style */
-            color: #FFFFFF;
-            border: none;
-            cursor: pointer;
-            transition: var(--transition-smooth);
-            outline: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-call:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
-        }
-
-        .btn-call:active {
-            transform: scale(0.95);
-        }
-
-        /* Active buttons are light-gray in Discord */
-        .btn-call.active-red {
-            background-color: var(--bg-primary);
-            color: var(--color-text-normal);
-        }
-
-        .btn-call.active-red:hover {
-            background-color: var(--bg-card-hover);
-        }
-
-        /* Hangup button is always red */
-        .btn-call.btn-hangup {
-            background-color: var(--color-red);
-            color: #FFFFFF;
-        }
-
-        .btn-call.btn-hangup:hover {
-            background-color: var(--color-red-hover);
-            transform: scale(1.05) rotate(90deg);
-        }
-
-        /* ===== ADMIN DRAWER MODALS ===== */
+        /* ===== MODAL DIALOGS ===== */
         .admin-drawer {
             position: fixed;
             inset: 0;
-            background-color: rgba(17, 18, 20, 0.8);
-            backdrop-filter: blur(5px);
-            z-index: 1200;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
             display: none;
             align-items: center;
             justify-content: center;
@@ -947,30 +1259,50 @@
 
         .admin-dialog {
             background-color: var(--bg-secondary);
-            border: var(--border-subtle);
-            border-radius: var(--border-radius-lg);
+            border-radius: 8px;
             width: 90%;
             max-width: 440px;
-            padding: 2.2rem;
             box-shadow: var(--shadow-hover);
+            border: var(--border-subtle);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: modal-pop 0.15s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+
+        @keyframes modal-pop {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
         .admin-title-row {
+            padding: 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.2);
+            font-weight: 700;
+            font-size: 1.1rem;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.6rem;
-            padding-bottom: 0.8rem;
-            border-bottom: var(--border-subtle);
+            justify-content: space-between;
+        }
+
+        .modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+
+        .modal-footer {
+            padding: 16px;
+            background-color: var(--bg-tertiary);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
         }
 
         .participants-list {
             display: flex;
             flex-direction: column;
-            gap: 0.8rem;
-            max-height: 250px;
-            overflow-y: auto;
-            margin-bottom: 1.6rem;
+            gap: 8px;
         }
 
         .participant-item {
@@ -979,27 +1311,26 @@
             align-items: center;
             background-color: var(--bg-primary);
             border-radius: var(--border-radius-md);
-            padding: 0.8rem 1.2rem;
+            padding: 8px 12px;
             border: var(--border-subtle);
         }
 
         .participant-name {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--color-text-normal);
+            font-size: 0.9rem;
+            font-weight: 600;
         }
 
         .participant-actions {
             display: flex;
-            gap: 0.5rem;
+            gap: 4px;
         }
 
         .btn-mini {
             background-color: var(--bg-secondary);
             border: var(--border-subtle);
             border-radius: var(--border-radius-sm);
-            width: 2.2rem;
-            height: 2.2rem;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1011,291 +1342,141 @@
         .btn-mini:hover {
             background-color: var(--color-red);
             color: #FFFFFF;
-            transform: translateY(-1px);
         }
 
-        /* ===== MOBILE RESPONSIBILITY FINETUNING ===== */
-        @media (max-width: 600px) {
-            .app-container {
-                padding: 1rem 1rem 3rem 1rem;
-            }
-
-            .logo-text {
-                font-size: 1.2rem;
-            }
-
-            .badge-status {
-                font-size: 0.7rem;
-                padding: 0.3rem 0.7rem;
-            }
-
-            .card {
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
-            }
-
-            .btn {
-                padding: 0.9rem 1.4rem;
-                font-size: 0.85rem;
-            }
-
-            .call-overlay {
-                padding: 0.8rem 0.8rem 0.5rem 0.8rem;
-            }
-
-            .call-header {
-                padding: 0.6rem 1rem;
-                margin-bottom: 0.8rem;
-                border-radius: var(--border-radius-md);
-            }
-
-            .call-header .logo-text {
-                display: none;
-            }
-
-            .call-actions-top .btn {
-                padding: 0.5rem 0.7rem;
-                font-size: 0;
-                width: 2.6rem;
-                height: 2.6rem;
-                border-radius: var(--border-radius-sm);
-            }
-
-            .call-actions-top .btn svg {
-                margin: 0;
-            }
-
-            .call-main-container {
-                height: calc(100vh - 10rem);
-                gap: 0.8rem;
-            }
-
-            .chat-drawer {
-                height: 180px;
-            }
-
-            .call-controls-bar {
-                padding: 0.8rem;
-                margin-top: 0.8rem;
-                gap: 1rem;
-                border-radius: var(--border-radius-lg);
-            }
-
-            .btn-call {
-                width: 3rem;
-                height: 3rem;
-            }
-
-            /* Custom dynamic sliding mobile Chat Drawer */
-            .chat-drawer {
-                position: absolute !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                width: 100% !important;
-                height: 320px !important;
-                z-index: 999 !important;
-                background-color: rgba(17, 18, 20, 0.96) !important;
-                backdrop-filter: blur(15px) !important;
-                border-top: var(--border-subtle) !important;
-                border-left: none !important;
-                border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0 !important;
-                box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.6) !important;
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            }
-
-            .chat-drawer.hidden {
-                display: none !important;
-            }
-
-            .call-main-container {
-                position: relative !important;
-                height: calc(100vh - 10rem) !important;
-                overflow: hidden !important;
-            }
-
-            .video-grid-container {
-                height: 100% !important;
-                width: 100% !important;
-            }
-
-            /* Custom sliding mobile Admin/Participants Drawer */
-            .admin-drawer {
-                align-items: flex-end !important;
-            }
-
-            .admin-drawer .admin-dialog {
-                width: 100% !important;
-                max-width: 100% !important;
-                border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0 !important;
-                border-bottom: none !important;
-                border-left: none !important;
-                border-right: none !important;
-                box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.6) !important;
-                padding: 1.8rem !important;
-                background-color: rgba(17, 18, 20, 0.96) !important;
-                backdrop-filter: blur(15px) !important;
-                animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-
-        /* VIEW MODES FOR VIDEO GRID */
-        .video-grid-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border-radius: var(--border-radius-lg);
-        }
-
-        /* Carousel Controls overlaying on the grid */
+        /* ===== CAROUSEL CONTROLS ===== */
         .carousel-controls {
             position: absolute;
-            bottom: 1.5rem;
+            bottom: 12px;
             left: 0;
             right: 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 1.5rem;
+            padding: 0 24px;
             pointer-events: none;
             z-index: 10;
         }
 
         .carousel-arrow {
-            width: 3rem;
-            height: 3rem;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            background: rgba(17, 18, 20, 0.7);
+            background: rgba(17, 18, 20, 0.8);
             border: var(--border-subtle);
             color: #FFFFFF;
-            font-size: 1.8rem;
+            font-size: 1.25rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             pointer-events: auto;
             transition: var(--transition-smooth);
-            backdrop-filter: blur(5px);
         }
 
         .carousel-arrow:hover {
             background: var(--color-blurple);
-            transform: scale(1.1);
         }
 
         .carousel-indicators {
             display: flex;
-            gap: 0.5rem;
+            gap: 6px;
             pointer-events: auto;
-            background: rgba(17, 18, 20, 0.7);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
-            border: var(--border-subtle);
+            background: rgba(17, 18, 20, 0.8);
+            padding: 4px 10px;
+            border-radius: 12px;
         }
 
         .carousel-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.4);
             cursor: pointer;
-            transition: var(--transition-smooth);
         }
 
         .carousel-dot.active {
             background: var(--color-blurple);
-            transform: scale(1.3);
-            box-shadow: 0 0 8px var(--color-blurple);
         }
 
-        /* Speaker View Styles */
+        /* Mode Speaker Layout */
         .video-grid.mode-speaker {
             display: flex;
             flex-direction: column;
-            gap: 1rem !important;
+            gap: 12px;
             height: 100%;
-            width: 100%;
-        }
-
-        .video-grid.mode-speaker .video-wrapper {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .video-grid.mode-speaker .video-wrapper.main-focus {
-            flex: 1;
+            flex-grow: 1;
             min-height: 0;
-            width: 100%;
-            max-height: calc(100% - 150px);
+            max-height: calc(100% - 130px);
         }
 
-        /* Horizontal Carousel Row for Speaker Mode */
         .speaker-scroll-row {
             display: flex;
-            gap: 0.8rem;
+            gap: 12px;
             overflow-x: auto;
-            padding: 0.5rem 0.2rem;
-            height: 140px;
-            width: 100%;
+            height: 120px;
             flex-shrink: 0;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
+            padding: 4px;
         }
 
         .speaker-scroll-row .video-wrapper {
-            width: 160px;
-            height: 120px;
+            width: 140px;
+            height: 110px;
             flex-shrink: 0;
-        }
-
-        /* Carousel (Slideshow) Mode Styles */
-        .video-grid.mode-carousel {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            align-items: center;
-            justify-content: center;
         }
 
         .video-grid.mode-carousel .video-wrapper {
             display: none;
             width: 100%;
             height: 100%;
-            transition: opacity 0.3s ease;
         }
 
         .video-grid.mode-carousel .video-wrapper.active-slide {
             display: block;
-            opacity: 1;
         }
 
-        .video-grid {
-            display: grid;
-            gap: 1.2rem;
+        /* Fake Cursor */
+        #remote-cursor {
+            pointer-events: none;
+            position: fixed;
+            z-index: 10000;
+            width: 24px;
+            height: 24px;
+            transition: top 0.05s linear, left 0.05s linear;
+        }
+
+        /* Admin Table Styles */
+        .admin-table {
             width: 100%;
-            height: 100%;
-            max-height: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-top: 12px;
+        }
+        .admin-table th, .admin-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .admin-table th {
+            color: var(--color-text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 0.05em;
+        }
+        .admin-table tbody tr:hover {
+            background-color: rgba(255,255,255,0.02);
         }
     </style>
 </head>
 <body>
 
-    <!-- 10. Intro Animation Screen (2 seconds) -->
+    <!-- Intro Animation Screen -->
     <div id="entry-animation" class="entry-overlay">
         <div class="animation-container">
-            <svg class="anim-logo" width="120" height="120" viewBox="0 0 100 100">
-                <path class="logo-path-black" d="M30,70 L30,30 L70,30" stroke="#121212" stroke-width="6" fill="none" stroke-linecap="square"/>
-                <path class="logo-path-red" d="M70,30 L70,70 L30,70" stroke="#C93B47" stroke-width="6" fill="none" stroke-linecap="square"/>
-                <circle class="logo-dot" cx="50" cy="50" r="7" fill="#121212" />
-            </svg>
+            <img class="agile-logo-spinner" src="logo.png" alt="Agile Call">
             <h1 class="anim-title">AGILE CALL</h1>
             <div class="progress-bar-container">
                 <div class="progress-bar-fill"></div>
@@ -1303,261 +1484,513 @@
         </div>
     </div>
 
-    <!-- 8. Single Page Application Site Container -->
-    <div class="app-container">
+    <!-- Registration / Login Overlay -->
+    <div id="auth-overlay" class="auth-overlay">
+        <div class="auth-card">
+            <div class="auth-header">
+                <img src="logo.png" alt="Agile Call" style="height: 56px; width: auto; margin-bottom: 16px; filter: drop-shadow(0px 0px 8px rgba(255,255,255,0.08));">
+                <h2 class="auth-title" id="auth-card-title">Создать аккаунт</h2>
+                <p class="auth-subtitle" id="auth-card-subtitle">Введите ваши данные для регистрации</p>
+            </div>
+            
+            <!-- Register Form -->
+            <form id="auth-register-form" class="auth-form" onsubmit="return false;">
+                <div class="home-input-group">
+                    <label class="home-input-label">Имя пользователя</label>
+                    <input type="text" id="auth-reg-username" class="home-input" placeholder="Никнейм" required autocomplete="username">
+                </div>
+                <div class="home-input-group">
+                    <label class="home-input-label">Электронная почта</label>
+                    <input type="email" id="auth-reg-email" class="home-input" placeholder="name@email.com" required autocomplete="email">
+                </div>
+                <div class="home-input-group">
+                    <label class="home-input-label">Пароль</label>
+                    <input type="password" id="auth-reg-password" class="home-input" placeholder="Пароль" required autocomplete="new-password">
+                </div>
+                
+                <div class="home-input-group">
+                    <label class="avatar-selector-label">Выберите цвет аватарки</label>
+                    <div class="avatar-color-picker" id="avatar-color-picker">
+                        <!-- Colors inserted dynamically -->
+                    </div>
+                </div>
+                
+                <button type="submit" id="btn-auth-register-submit" class="btn-home" style="margin-top: 10px;">Зарегистрироваться</button>
+                <a class="auth-switch-link" id="link-switch-to-login">Уже зарегистрированы? Войти в аккаунт</a>
+            </form>
+            
+            <!-- Login Form -->
+            <form id="auth-login-form" class="auth-form" style="display: none;" onsubmit="return false;">
+                <div class="home-input-group">
+                    <label class="home-input-label">Электронная почта</label>
+                    <input type="email" id="auth-login-email" class="home-input" placeholder="name@email.com" required autocomplete="email">
+                </div>
+                <div class="home-input-group">
+                    <label class="home-input-label">Пароль</label>
+                    <input type="password" id="auth-login-password" class="home-input" placeholder="Введите пароль" required autocomplete="current-password">
+                </div>
+                
+                <button type="submit" id="btn-auth-login-submit" class="btn-home" style="margin-top: 10px;">Войти</button>
+                <a class="auth-switch-link" id="link-switch-to-register">Нужен аккаунт? Зарегистрироваться</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="agile-app" id="agile-app-container">
         
-        <!-- Header -->
-        <header>
-            <a href="#" class="header-logo">
-                <svg width="36" height="36" viewBox="0 0 100 100">
-                    <path id="header-logo-black" d="M30,70 L30,30 L70,30" stroke="#121212" stroke-width="8" fill="none" stroke-linecap="square"/>
-                    <path d="M70,30 L70,70 L30,70" stroke="#C93B47" stroke-width="8" fill="none" stroke-linecap="square"/>
-                    <circle id="header-logo-dot" cx="50" cy="50" r="8" fill="#121212" />
-                </svg>
-                <span class="logo-text">Agile Call</span>
-            </a>
-            <div class="header-right">
-                <div class="badge-status">Бизнес-версия</div>
-                <div class="theme-switch-container">
-                    <button id="btn-theme-light" class="btn-theme-pill" title="Светлая тема" aria-label="Включить светлую тему">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="theme-icon-mini">
-                            <circle cx="12" cy="12" r="5"></circle>
-                            <line x1="12" y1="1" x2="12" y2="3"></line>
-                            <line x1="12" y1="21" x2="12" y2="23"></line>
-                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                            <line x1="1" y1="12" x2="3" y2="12"></line>
-                            <line x1="21" y1="12" x2="23" y2="12"></line>
-                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                        </svg>
-                        <span>Светлая</span>
-                    </button>
-                    <button id="btn-theme-dark" class="btn-theme-pill" title="Тёмная тема" aria-label="Включить тёмную тему">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="theme-icon-mini">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                        </svg>
-                        <span>Тёмная</span>
-                    </button>
+        <!-- 1. Servers Column -->
+        <aside class="servers-sidebar">
+            <button class="server-btn home-btn active" id="btn-server-home" title="Главная">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 3L2 12h3v8h5v-6h4v6h5v-8h3L12 3z"/></svg>
+            </button>
+            <div class="server-divider"></div>
+            <button class="server-btn" id="btn-server-agile" title="Сервер Agile Call">
+                <strong>A</strong>
+            </button>
+            <button class="server-btn add-btn" id="btn-server-add" title="Присоединиться по коду">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <div class="server-divider" id="admin-sidebar-divider" style="display: none;"></div>
+            <button class="server-btn" id="btn-server-admin" title="Панель администратора" style="display: none; color: var(--color-yellow);">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2L9 7l-6-2 3 9v5h12v-5l3-9-6 2-3-5z"/></svg>
+            </button>
+        </aside>
+
+        <!-- 2. Channels Column -->
+        <aside class="channels-sidebar">
+            <div class="server-header" id="btn-server-settings">
+                <span id="sidebar-server-name">Agile Call Hub</span>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            
+            <!-- Creator Invite Button -->
+            <button id="btn-sidebar-invite" class="btn-home" style="display: none; width: calc(100% - 24px); margin: 10px 12px; background-color: var(--color-blurple); border-radius: var(--border-radius-md); font-size: 0.82rem; font-weight: 600; padding: 10px 12px; gap: 8px; align-items: center; justify-content: center; transition: var(--transition-smooth); cursor: pointer; border: none; color: white;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 4px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                Пригласить людей
+            </button>
+            
+            <div class="channels-list-container">
+                <!-- Text Channels Category -->
+                <div class="channel-category">
+                    <div class="category-header">Текстовые каналы</div>
+                    <a href="#" class="channel-item active" id="btn-channel-chat">
+                        <span style="font-size: 1.1rem; line-height: 1;">#</span> general-chat
+                    </a>
+                </div>
+
+                <!-- Voice Channels Category -->
+                <div class="channel-category">
+                    <div class="category-header">Голосовые каналы</div>
+                    
+                    <div class="voice-channel-group">
+                        <a href="#" class="channel-item" data-channel-id="general" id="vc-general">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                            Lounge
+                        </a>
+                        <div class="channel-users-list" id="vc-users-general">
+                            <!-- Dynamic user listing with avatar + name -->
+                        </div>
+                    </div>
+
+                    <div class="voice-channel-group">
+                        <a href="#" class="channel-item" data-channel-id="main" id="vc-main">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                            General Call
+                        </a>
+                        <div class="channel-users-list" id="vc-users-main">
+                            <!-- Dynamic user listing with avatar + name -->
+                        </div>
+                    </div>
+
+                    <div class="voice-channel-group">
+                        <a href="#" class="channel-item" data-channel-id="gaming" id="vc-gaming">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                            Gaming Room
+                        </a>
+                        <div class="channel-users-list" id="vc-users-gaming">
+                            <!-- Dynamic user listing with avatar + name -->
+                        </div>
+                    </div>
+
+                    <div class="voice-channel-group">
+                        <a href="#" class="channel-item" data-channel-id="agile" id="vc-agile">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                            Agile Boardroom
+                        </a>
+                        <div class="channel-users-list" id="vc-users-agile">
+                            <!-- Dynamic user listing with avatar + name -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
-        <!-- Main Workspace Grid -->
-        <main class="main-grid">
+            <!-- Profile Footer Panel -->
+            <footer class="user-profile-panel">
+                <div class="profile-user-info" id="profile-user-info">
+                    <div class="profile-avatar-wrapper">
+                        <div class="profile-avatar" id="my-profile-avatar">P</div>
+                        <div class="status-dot"></div>
+                    </div>
+                    <div class="profile-names">
+                        <span class="profile-username" id="my-profile-name">Пользователь</span>
+                        <span class="profile-tag">#0001</span>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button id="btn-profile-mic" class="profile-btn" title="Выключить микрофон">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+                    </button>
+                    <button id="btn-profile-deafen" class="profile-btn" title="Заглушить звуки">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+                    </button>
+                    <button id="btn-profile-settings" class="profile-btn" title="Настройки">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>
+                </div>
+            </footer>
+        </aside>
+
+        <!-- 3. Main Window -->
+        <main class="main-content">
             
-            <!-- Left Side: User Cabinet & Room creation -->
-            <section>
-                <!-- Cabinet Card -->
-                <div class="card">
-                    <h2 class="card-title">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                        Личный кабинет
-                    </h2>
-                    
-                    <div class="input-group" id="username-container">
-                        <label class="input-label" for="username-input">Ваше имя в конференции</label>
-                        <input type="text" id="username-input" class="custom-input" placeholder="Введите ваше имя">
+            <!-- 3a. Home Screen Dashboard -->
+            <section id="agile-home-screen" class="home-screen">
+                <div class="home-hero">
+                    <img src="logo.png" alt="Agile Call" style="height: 80px; width: auto; margin-bottom: 16px; filter: drop-shadow(0px 0px 10px rgba(255,255,255,0.08));">
+                    <h2 class="home-title">Добро пожаловать в Agile Call</h2>
+                    <p class="home-subtitle">Современные WebRTC-конференции, интегрированные с Telegram и автоматической транскрипцией речи.</p>
+                </div>
+
+                <div class="home-actions-grid">
+                    <!-- Create server -->
+                    <div class="home-card">
+                        <h3 class="home-card-title">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Создать сервер
+                        </h3>
+                        <p class="home-card-desc">Создайте свой уникальный сервер для звонков. Доступно создание максимум 3 серверов на пользователя.</p>
+                        
+                        <div class="home-input-group">
+                            <label class="home-input-label">Название сервера</label>
+                            <input type="text" id="home-create-name-input" class="home-input" placeholder="Мой сервер звонков">
+                        </div>
+                        <div class="home-input-group">
+                            <label class="home-input-label">Пароль сервера (необязательно)</label>
+                            <input type="password" id="home-create-password-input" class="home-input" placeholder="Оставьте пустым для открытого входа">
+                        </div>
+                        
+                        <button id="btn-home-create" class="btn-home">
+                            Создать сервер
+                        </button>
                     </div>
 
-                    <div class="input-group">
-                        <label class="input-label">Предпросмотр камеры и проверка звука</label>
-                        <div class="preview-wrapper">
-                            <video id="local-preview" class="mirrored" autoplay muted playsinline></video>
-                            <div class="preview-controls">
-                                <button id="btn-preview-mic" class="btn btn-secondary btn-icon-only" title="Включить/выключить микрофон">
-                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
-                                </button>
-                                <button id="btn-preview-cam" class="btn btn-secondary btn-icon-only" title="Включить/выключить камеру">
-                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-                                </button>
+                    <!-- Join server -->
+                    <div class="home-card">
+                        <h3 class="home-card-title">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" x2="3" y1="12" y2="12"></line></svg>
+                            Войти по коду
+                        </h3>
+                        <p class="home-card-desc">Введите инвайт-код сервера, чтобы присоединиться к беседе. Для закрытых серверов потребуется пароль.</p>
+                        
+                        <div class="home-input-group">
+                            <label class="home-input-label">Код приглашения</label>
+                            <input type="text" id="home-join-code-input" class="home-input" placeholder="Например: AGILE_CALL">
+                        </div>
+                        
+                        <button id="btn-home-join" class="btn-home btn-green">
+                            Войти на сервер
+                        </button>
+                    </div>
+                </div>
+
+                <div class="home-footer-info">
+                    <div class="footer-info-card">
+                        <h4 class="footer-info-title" style="color:var(--color-blurple);">WebRTC и Низкий пинг</h4>
+                        <p class="footer-info-desc">Аудио и видео транслируются напрямую между участниками, снижая сетевые задержки связи до минимума.</p>
+                    </div>
+                    <div class="footer-info-card">
+                        <h4 class="footer-info-title" style="color:var(--color-green);">Транскрипция в текст</h4>
+                        <p class="footer-info-desc">Встроенный ИИ распознает вашу речь и автоматически выводит расшифровку разговора прямо в чат.</p>
+                    </div>
+                    <div class="footer-info-card">
+                        <h4 class="footer-info-title" style="color:var(--color-yellow);">Демонстрация экрана</h4>
+                        <p class="footer-info-desc">Демонстрируйте презентации, окна программ или рабочий стол одним нажатием кнопки.</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 40px; font-size: 0.8rem; color: var(--color-text-muted);">
+                    Проект разработан <a href="https://agile-business-pro.com/" target="_blank" style="color: var(--color-blurple); text-decoration: none; font-weight: 600;">Agile Business</a>
+                </div>
+            </section>
+
+            <!-- 3b. Call Screen (active voice channel layout) -->
+            <section id="agile-call-screen" class="call-screen">
+                
+                <!-- Call Header Bar -->
+                <header class="call-header-bar">
+                    <div class="call-status-left">
+                        <div class="call-channel-title">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                            <span id="active-channel-name">Lounge</span>
+                        </div>
+                        <div class="call-status-badge">
+                            <span class="badge-dot"></span>
+                            Голос подключен
+                        </div>
+                    </div>
+
+                    <div class="call-header-actions">
+                        <button id="btn-header-invite" class="header-action-btn" title="Скопировать ссылку-приглашение">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                            Инвайт: <span id="current-room-id" style="font-family: monospace;">AGILE_CALL</span>
+                        </button>
+                        <button id="btn-toggle-view-mode" class="header-action-btn" title="Сменить сетку видео">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                            <span>Сетка</span>
+                        </button>
+                        <button id="btn-admin-panel" class="header-action-btn">
+                            Участники
+                        </button>
+                        <button id="btn-breakout-panel" class="header-action-btn" style="display: none;">
+                            Создать приват
+                        </button>
+                        <button id="btn-return-to-main" class="header-action-btn" style="background-color: var(--color-green); color: white; display: none;">
+                            Вернуться
+                        </button>
+                        <button id="btn-toggle-chat" class="header-action-btn">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            Чат
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Workspace: Video grid & chat drawer -->
+                <div class="call-workspace">
+                    
+                    <!-- Video Grid container -->
+                    <div class="video-grid-container">
+                        <div id="video-grid" class="video-grid grid-1-player">
+                            <!-- Dynamic videos are rendered here -->
+                        </div>
+                        
+                        <!-- Carousel controls -->
+                        <div id="carousel-controls" class="carousel-controls" style="display: none;">
+                            <button id="btn-carousel-prev" class="carousel-arrow">‹</button>
+                            <div id="carousel-indicators" class="carousel-indicators"></div>
+                            <button id="btn-carousel-next" class="carousel-arrow">›</button>
+                        </div>
+                    </div>
+
+                    <!-- Right Chat Drawer (collapsible) -->
+                    <div id="chat-drawer" class="chat-drawer">
+                        <div class="chat-header">
+                            <div style="display: flex; flex-direction: column;">
+                                <span>Чат канала</span>
+                                <div class="speech-indicator">
+                                    <span id="speech-dot" class="speech-dot"></span>
+                                    <span id="speech-status-text">Тишина</span>
+                                </div>
                             </div>
+                            <button id="btn-close-chat" class="btn-close-chat">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+                        
+                        <div id="chat-messages" class="chat-messages">
+                            <!-- Chat message bubbles -->
+                        </div>
+                        
+                        <div class="chat-input-area">
+                            <div class="chat-input-wrapper">
+                                <input type="text" id="chat-input" class="home-input" placeholder="Отправить сообщение..." style="background-color: var(--bg-secondary);">
+                            </div>
+                            <button id="btn-send-chat" class="btn-home" style="width: auto; padding: 10px 14px;">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Call setup Card -->
-                <div class="card">
-                    <h2 class="card-title">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><path d="M12 11h.01"></path><path d="M17 11h.01"></path><path d="M7 11h.01"></path></svg>
-                        Подключение
-                    </h2>
-                    
-                    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1.5rem; line-height: 1.5;">
-                        Все пользователи автоматически подключаются к единой корпоративной видеоконференции Agile Call.
-                    </p>
-                    
-                    <button id="btn-join" class="btn" style="margin-bottom: 0;">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 0.3rem;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" x2="3" y1="12" y2="12"></line></svg>
-                        Подключиться к конференции
+                <!-- Bottom Floating Control Bar -->
+                <div class="call-controls-bar">
+                    <button id="btn-call-cam" class="btn-call" title="Камера">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                     </button>
-                    
-                    <!-- Скрытые элементы для совместимости со скриптами -->
-                    <input type="hidden" id="room-input" value="AGILE_CALL">
-                    <button id="btn-create" style="display: none;"></button>
+                    <button id="btn-call-mic" class="btn-call" title="Микрофон">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+                    </button>
+                    <button id="btn-call-share" class="btn-call" title="Трансляция экрана">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>
+                    </button>
+                    <button id="btn-call-remote" class="btn-call" title="Удаленное управление">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line></svg>
+                    </button>
+                    <button id="btn-leave" class="btn-call btn-hangup" title="Отключиться">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" x2="6" y1="6" y2="18"></line><line x1="6" x2="18" y1="6" y2="18"></line></svg>
+                    </button>
                 </div>
             </section>
 
-            <!-- Right Side: Marketing and business integration info -->
-            <section class="info-section">
-                <div>
-                    <h2 class="info-header">Agile Call для бизнеса</h2>
-                    <p class="info-desc">Современное решение для быстрого корпоративного взаимодействия. Проводите планирования, летучки и встречи с клиентами в один клик без установки дополнительных программ.</p>
+            <!-- 3c. Admin Screen Dashboard -->
+            <section id="agile-admin-screen" class="home-screen" style="display: none;">
+                <div class="home-hero" style="margin-bottom: 24px; text-align: left;">
+                    <h2 class="home-title" style="color: var(--color-yellow); display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M12 2L9 7l-6-2 3 9v5h12v-5l3-9-6 2-3-5z"/></svg>
+                        Панель администратора
+                    </h2>
+                    <p class="home-subtitle" style="margin: 0;">Управление пользователями, серверами и правами доступа системы.</p>
                 </div>
-
-                <div>
-                    <div class="benefit-card">
-                        <h3 class="benefit-title">Низкая задержка связи</h3>
-                        <p class="benefit-text">Использование протокола WebRTC обеспечивает передачу аудио и видео высокой четкости напрямую между участниками без промежуточных буферов.</p>
-                    </div>
-
-                    <div class="benefit-card">
-                        <h3 class="benefit-title">Интеграция с Telegram</h3>
-                        <p class="benefit-text">Платформа спроектирована для работы как в браузере, так и внутри Telegram Mini Apps, упрощая приглашение коллег.</p>
-                    </div>
-
-                    <div class="benefit-card">
-                        <h3 class="benefit-title">Автоматический протокол встречи</h3>
-                        <p class="benefit-text">Уникальная система распознавания речи автоматически переводит голоса участников в текст прямо в чате, создавая готовый протокол звонка.</p>
-                    </div>
+                
+                <div style="display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
+                    <button id="btn-admin-tab-users" class="btn-home" style="width: auto; background-color: var(--color-blurple);">Пользователи</button>
+                    <button id="btn-admin-tab-servers" class="btn-home btn-green" style="width: auto; background-color: var(--bg-card); color: var(--color-text-normal);">Серверы</button>
                 </div>
-
-                <!-- 9. Agile Business bold text statement -->
-                <div class="business-accent-box">
-                    Компания Agile Business может внедрить её в ваш бизнес
+                
+                <!-- Users list tab content -->
+                <div id="admin-tab-users-content" class="home-card" style="padding: 16px; overflow-x: auto; width: 100%;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Имя пользователя</th>
+                                <th>Email</th>
+                                <th>Роль</th>
+                                <th style="text-align: right;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-table-body">
+                            <!-- Filled dynamically -->
+                        </tbody>
+                    </table>
                 </div>
-
-                <!-- 5. Navigation Button to company site -->
-                <a href="https://agile-business-pro.com/" target="_blank" class="footer-site-link" id="btn-company-site">
-                    Перейти на сайт Agile Business
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
-                </a>
+                
+                <!-- Servers list tab content -->
+                <div id="admin-tab-servers-content" class="home-card" style="padding: 16px; overflow-x: auto; display: none; width: 100%;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Код сервера</th>
+                                <th>Название</th>
+                                <th>Владелец (Owner ID)</th>
+                                <th>Пароль</th>
+                                <th style="text-align: right;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-servers-table-body">
+                            <!-- Filled dynamically -->
+                        </tbody>
+                    </table>
+                </div>
             </section>
         </main>
     </div>
 
-    <!-- 2. Call Screen (Fullscreen Overlay) -->
-    <div id="call-screen" class="call-overlay">
-        <!-- Top bar -->
-        <div class="call-header">
-            <div class="call-room-info">
-                <span class="logo-text" style="font-size: 1.1rem;">Agile Call</span>
-                <div>Код: <span id="current-room-id" class="room-badge"></span></div>
-            </div>
-            
-            <div class="call-actions-top">
-                <button id="btn-copy-link" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px;" title="Скопировать ссылку для приглашения">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                    Ссылка
-                </button>
-                <button id="btn-toggle-view-mode" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px;" title="Сменить режим показа">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-                    <span>Сетка</span>
-                </button>
-                <button id="btn-admin-panel" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px;">
-                    Участники
-                </button>
-                <button id="btn-breakout-panel" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px; display: none;">
-                    Создать приватную беседу
-                </button>
-                <button id="btn-return-to-main" class="btn" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px; background-color: var(--color-green); display: none;" title="Вернуться в основной звонок">
-                    Вернуться в основной звонок
-                </button>
-                <button id="btn-toggle-chat" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.8rem; width: auto; border-radius: 8px;">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    Чат
-                </button>
-            </div>
-        </div>
-
-        <!-- Mid section: Split Video Grid + Live Chat drawer -->
-        <div class="call-main-container">
-            <!-- 3. Video grid -->
-            <div class="video-grid-container">
-                <div id="video-grid" class="video-grid grid-1-player">
-                    <!-- Dynamic videos here -->
-                </div>
-                <!-- Carousel Controls & Indicators -->
-                <div id="carousel-controls" class="carousel-controls" style="display: none;">
-                    <button id="btn-carousel-prev" class="carousel-arrow" aria-label="Предыдущий участник">‹</button>
-                    <div id="carousel-indicators" class="carousel-indicators"></div>
-                    <button id="btn-carousel-next" class="carousel-arrow" aria-label="Следующий участник">›</button>
-                </div>
-            </div>
-
-            <!-- 16. Chat drawer (Voice transcription & messages) -->
-            <div id="chat-drawer" class="chat-drawer">
-                <div class="chat-header">
-                    <div style="display: flex; align-items: center; gap: 0.8rem;">
-                        <span>Транскрипция встречи</span>
-                        <div class="speech-indicator">
-                            <div id="speech-dot" class="speech-dot"></div>
-                            <span id="speech-status-text">Тишина</span>
-                        </div>
-                    </div>
-                    <button id="btn-close-chat" class="btn-close-chat" aria-label="Закрыть чат">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:1.1rem;height:1.1rem;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-                </div>
-                <div id="chat-messages" class="chat-messages">
-                    <!-- Dynamic messages -->
-                </div>
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" class="custom-input" placeholder="Сообщение..." style="padding: 0.7rem 1rem; font-size: 0.85rem; border-radius: 8px;">
-                    <button id="btn-send-chat" class="btn" style="width: auto; padding: 0.7rem 1.2rem; border-radius: 8px;">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom floating control bar (No emojis) -->
-        <div class="call-controls-bar">
-            <button id="btn-call-mic" class="btn-call active-red" title="Микрофон">
-                <!-- Microphone SVG -->
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
-            </button>
-            <button id="btn-call-cam" class="btn-call active-red" title="Камера">
-                <!-- Camera SVG -->
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-            </button>
-            <button id="btn-call-share" class="btn-call" title="Трансляция экрана">
-                <!-- Screen Share SVG -->
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>
-            </button>
-            <button id="btn-call-remote" class="btn-call" title="Удаленное управление">
-                <!-- Remote Control SVG -->
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line></svg>
-            </button>
-            <button id="btn-leave" class="btn-call btn-hangup" title="Завершить вызов">
-                <!-- Hangup Cross SVG -->
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" x2="6" y1="6" y2="18"></line><line x1="6" x2="18" y1="6" y2="18"></line></svg>
-            </button>
-        </div>
+    <!-- Hidden elements for script compatibility -->
+    <div style="display: none;">
+        <input type="hidden" id="room-input" value="AGILE_CALL">
+        <button id="btn-create"></button>
+        <button id="btn-join"></button>
+        <input type="text" id="username-input">
+        <div id="username-container"></div>
+        <video id="local-preview" autoplay muted playsinline></video>
+        <button id="btn-preview-mic"></button>
+        <button id="btn-preview-cam"></button>
     </div>
 
     <!-- Fake Remote Cursor -->
-    <div id="remote-cursor" style="display:none; position:fixed; z-index:99999; width:24px; height:24px; pointer-events:none; transition: top 0.05s linear, left 0.05s linear;">
-        <svg viewBox="0 0 24 24" fill="var(--color-red)" stroke="var(--color-black)" stroke-width="1.5">
+    <div id="remote-cursor" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="var(--color-red)" stroke="#000000" stroke-width="1.5" width="24" height="24">
             <polygon points="5 3 19 12 11 14 15 21 12 22 8 15 5 19 5 3"></polygon>
         </svg>
+    </div>
+
+    <!-- User Profile Settings Modal -->
+    <div id="profile-settings-modal" class="admin-drawer">
+        <div class="admin-dialog">
+            <div class="admin-title-row">
+                <span>Настройки профиля</span>
+                <button id="btn-close-profile-settings" class="btn-close-chat">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="home-input-group">
+                    <label class="home-input-label">Имя пользователя</label>
+                    <input type="text" id="settings-username-input" class="home-input" placeholder="Введите имя">
+                </div>
+                <div class="home-input-group">
+                    <label class="home-input-label">Тема оформления</label>
+                    <div style="display: flex; gap: 8px; margin-top: 6px;">
+                        <button id="btn-theme-dark" class="btn-home" style="flex:1;">Темная</button>
+                        <button id="btn-theme-light" class="btn-home btn-green" style="flex:1;">Светлая</button>
+                    </div>
+                </div>
+                <button id="btn-logout" class="btn-home btn-green" style="margin-top: 20px; background-color: var(--color-red);">Выйти из аккаунта</button>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-save-profile-settings" class="btn-home" style="width: auto;">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite dialog / Server code display modal -->
+    <div id="invite-code-modal" class="admin-drawer">
+        <div class="admin-dialog">
+            <div class="admin-title-row">
+                <span>Пригласить друзей</span>
+                <button id="btn-close-invite-modal" class="btn-close-chat">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 16px;">Поделитесь кодом или ссылкой ниже, чтобы пригласить пользователей на этот сервер:</p>
+                <div style="background-color: var(--bg-primary); padding: 12px; border-radius: var(--border-radius-md); font-weight: 700; font-size: 1.5rem; letter-spacing: 2px; color: var(--color-blurple); margin-bottom: 16px; border: var(--border-subtle);" id="invite-code-display">AGILE_CALL</div>
+                <button id="btn-copy-invite-link" class="btn-home" style="width: 100%;">Скопировать ссылку-приглашение</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Server password prompt modal -->
+    <div id="server-password-modal" class="admin-drawer">
+        <div class="admin-dialog">
+            <div class="admin-title-row">
+                <span>Вход на сервер</span>
+                <button id="btn-close-pwd-modal" class="btn-close-chat">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 16px;">Этот сервер защищен паролем. Пожалуйста, введите пароль для входа:</p>
+                <div class="home-input-group">
+                    <label class="home-input-label">Пароль сервера</label>
+                    <input type="password" id="server-join-pwd-input" class="home-input" placeholder="Пароль">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-server-pwd-submit" class="btn-home" style="width: auto;">Войти</button>
+            </div>
+        </div>
     </div>
 
     <!-- Breakout Room Dialog Modal -->
     <div id="breakout-panel" class="admin-drawer">
         <div class="admin-dialog">
             <div class="admin-title-row">
-                <span class="logo-text" style="font-size: 1.1rem;">Создать приватную беседу</span>
-                <button id="btn-close-breakout" class="btn btn-secondary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;">Отмена</button>
+                <span>Создать приватную беседу</span>
+                <button id="btn-close-breakout" class="btn-close-chat">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
             </div>
-            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
-                Выберите участников для перемещения в приватную беседу:
-            </p>
-            <div id="breakout-participants-list" class="participants-list">
-                <!-- List of remote users with checkboxes -->
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px;">Выберите участников для перемещения в приватную беседу:</p>
+                <div id="breakout-participants-list" class="participants-list">
+                    <!-- List of remote users with checkboxes -->
+                </div>
             </div>
-            <button id="btn-start-breakout" class="btn">
-                Подключиться
-            </button>
+            <div class="modal-footer">
+                <button id="btn-start-breakout" class="btn-home">Подключиться</button>
+            </div>
         </div>
     </div>
 
@@ -1565,33 +1998,38 @@
     <div id="admin-panel" class="admin-drawer">
         <div class="admin-dialog">
             <div class="admin-title-row">
-                <span class="logo-text" style="font-size: 1.1rem;">Участники</span>
-                <button id="btn-close-admin" class="btn btn-secondary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;">Закрыть</button>
+                <span>Управление участниками</span>
+                <button id="btn-close-admin" class="btn-close-chat">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
             </div>
-            <div id="participants-list" class="participants-list">
-                <!-- Dynamic remote users -->
+            <div class="modal-body">
+                <div id="participants-list" class="participants-list">
+                    <!-- Dynamic remote users -->
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Remote Control Modal -->
-    <div id="remote-panel" class="admin-drawer" style="display:none;">
+    <div id="remote-panel" class="admin-drawer">
         <div class="admin-dialog">
             <div class="admin-title-row">
-                <span class="logo-text" style="font-size: 1.1rem;">Удаленное управление</span>
-                <button id="btn-close-remote" class="btn-icon-only btn-secondary" style="width: 2rem; height: 2rem; min-height: auto;">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" x2="6" y1="6" y2="18"></line><line x1="6" x2="18" y1="6" y2="18"></line></svg>
+                <span>Удаленное управление</span>
+                <button id="btn-close-remote" class="btn-close-chat">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div style="margin-bottom: 1.5rem; text-align: center;">
-                <div style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem; color: var(--color-gray);">Мой ID для подключения</div>
-                <div id="my-remote-id" style="font-size: 2rem; font-weight: 800; letter-spacing: 0.1em; color: var(--color-red);">000 000</div>
-            </div>
-            <div class="input-group" style="margin-bottom: 0;">
-                <label class="input-label">ID устройства партнера</label>
-                <div style="display:flex; gap: 0.5rem;">
-                    <input type="text" id="remote-partner-id" class="custom-input" placeholder="000 000">
-                    <button id="btn-connect-remote" class="btn" style="width: auto; padding: 0.5rem 1rem;">Подключиться</button>
+            <div class="modal-body" style="text-align: center;">
+                <div style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; color: var(--color-text-muted);">Мой ID для подключения</div>
+                <div id="my-remote-id" style="font-size: 2rem; font-weight: 800; letter-spacing: 2px; color: var(--color-red); margin-bottom: 20px;">000 000</div>
+                
+                <div class="home-input-group" style="text-align: left;">
+                    <label class="home-input-label">ID устройства партнера</label>
+                    <div style="display:flex; gap: 8px;">
+                        <input type="text" id="remote-partner-id" class="home-input" placeholder="000 000">
+                        <button id="btn-connect-remote" class="btn-home" style="width: auto; white-space: nowrap;">Подключиться</button>
+                    </div>
                 </div>
             </div>
         </div>
